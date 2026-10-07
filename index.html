@@ -261,6 +261,29 @@
   .botao.lilas { background: var(--lilas); color: #fff; }
   .botao.claro { background: transparent; color: var(--tinta); border: 2px solid var(--tinta); }
   .acoes-ano { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .painel { --painel: #FBF1C9; --bandeja: #F3E3A6; --destaque: #E0A800; display: inline-block; max-width: 100%; margin-top: 24px; padding: 12px 16px 16px; border-radius: 18px; position: relative;
+    background: var(--painel); box-shadow: inset 0 1px 0 #fff9, inset 0 -2px 0 #0000000f, 0 12px 24px -18px #0006; font-family: var(--fonte); }
+  .painel::before, .painel::after { content: ""; position: absolute; top: 12px; width: 6px; height: 6px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, #B9B4A6); box-shadow: 0 1px 0 #0002; }
+  .painel::before { left: 10px; } .painel::after { right: 10px; }
+  .painel-topo { display: flex; align-items: center; gap: 8px; padding: 0 12px 10px; font-size: 1rem; font-weight: 800; font-stretch: 70%; color: var(--tinta); }
+  .painel-linha { margin-left: auto; background: var(--destaque); color: #fff; padding: 2px 10px; border-radius: 999px; font-size: .9rem; }
+  .led { width: 8px; height: 8px; border-radius: 50%; background: #4CC77F; box-shadow: 0 0 6px #4CC77F; animation: piscar 2.4s ease-in-out infinite; }
+  @keyframes piscar { 50% { opacity: .35; box-shadow: none; } }
+  .teclas { display: flex; gap: 12px; padding: 14px 10px 8px; border-radius: 12px; background: var(--bandeja); box-shadow: inset 0 2px 5px #0000001a; }
+  .tecla { --cor: #fff; font: inherit; background: none; border: 0; padding: 0; width: 62px; display: flex; flex-direction: column; align-items: center; gap: 9px; cursor: pointer; color: var(--tinta); -webkit-tap-highlight-color: transparent; }
+  .tecla[hidden] { display: none; }
+  .tampa { position: relative; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center;
+    background: radial-gradient(circle at 34% 28%, color-mix(in srgb, var(--cor) 45%, #fff), var(--cor) 60%, color-mix(in srgb, var(--cor) 88%, #000));
+    box-shadow: 0 0 0 3px #fff, 0 0 0 4px #0000001f, 0 5px 0 4px color-mix(in srgb, var(--bandeja) 70%, #6b6250); transition: transform .12s, box-shadow .12s; }
+  .tampa svg { width: 22px; height: 22px; fill: none; stroke: var(--tinta); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tecla:active .tampa { transform: translateY(4px); box-shadow: 0 0 0 3px #fff, 0 0 0 4px #0000001f, 0 1px 0 4px color-mix(in srgb, var(--bandeja) 70%, #6b6250); }
+  .tecla:focus-visible .tampa { outline: 2px solid var(--tinta); outline-offset: 7px; }
+  .rotulo { font-size: .8rem; letter-spacing: -.01em; font-weight: 700; font-stretch: 75%; text-align: center; line-height: 1.05; }
+  .contagem { position: absolute; top: -8px; right: -10px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--tinta); color: #fff;
+    font-size: .75rem; font-weight: 800; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--bandeja); }
+  .tecla.girando svg { animation: girar .8s linear infinite; }
+  @media (max-width: 400px) { .painel { display: block; padding: 12px 10px 14px; } .teclas { justify-content: space-between; gap: 4px; padding: 12px 6px 4px; } .tecla { width: 58px; } .painel.compacto { display: inline-block; } .painel.compacto .teclas { justify-content: center; padding: 12px 22px 4px; } }
   .atualizar span { display: inline-block; margin-right: 4px; }
   .atualizar.girando span { animation: girar .8s linear infinite; }
   @keyframes girar { to { transform: rotate(360deg); } }
@@ -551,12 +574,15 @@
     <button class="voltar" id="voltar" type="button"><span class="mini-mapa"></span>Voltar ao mapa</button>
     <h1 id="titulo-ano">2024</h1>
     <p id="resumo-ano"></p>
-    <div class="acoes-ano">
-      <button class="botao" id="abrir-album" type="button">Álbum de fotos</button>
-      <button class="botao lilas" id="participar" type="button" hidden>Participar da lista</button>
-      <button class="botao claro" id="compartilhar-roteiro" type="button" hidden>Compartilhar roteiro</button>
-      <button class="botao amarelo" id="sugerir" type="button" hidden>Importante, não esquecer de:</button>
-      <button class="botao claro atualizar" id="atualizar-lista" type="button" hidden><span aria-hidden="true">↻</span> Atualizar</button>
+    <div class="painel" role="group" aria-label="Painel do maquinista">
+      <div class="painel-topo"><span class="led" aria-hidden="true"></span><span>Painel do maquinista</span><span class="painel-linha" id="painel-linha">Linha 6</span></div>
+      <div class="teclas">
+        <button class="tecla" id="abrir-album" type="button" style="--cor:#FFFFFF"><span class="tampa"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2.5"/><circle cx="12" cy="13" r="3.6"/><path d="M8.5 6l1.5-2.2h4L15.5 6"/></svg><span class="contagem" id="album-n" hidden></span></span><span class="rotulo">Álbum</span></button>
+        <button class="tecla" id="participar" type="button" hidden style="--cor:#D9C4EC"><span class="tampa"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="rotulo">Adicionar</span></button>
+        <button class="tecla" id="compartilhar-roteiro" type="button" hidden style="--cor:#C3E6D2"><span class="tampa"><svg viewBox="0 0 24 24"><path d="M12 15V4M7.5 8.5L12 4l4.5 4.5"/><path d="M5 13v5.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V13"/></svg></span><span class="rotulo">Enviar</span></button>
+        <button class="tecla" id="sugerir" type="button" hidden style="--cor:#FBE59A"><span class="tampa"><svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.2v.3"/></svg></span><span class="rotulo">Não esquecer</span></button>
+        <button class="tecla" id="atualizar-lista" type="button" hidden style="--cor:#C2D9F2"><span class="tampa"><svg viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.5 4.5v4.2h-4.2"/></svg></span><span class="rotulo">Atualizar</span></button>
+      </div>
     </div>
   </header>
   <main id="conteudo"></main>
@@ -1054,7 +1080,12 @@ function desenhar(ano, manterVisiveis) {
   $("compartilhar-roteiro").hidden = ano !== "2026";
   $("sugerir").hidden = ano !== "2026";
   $("atualizar-lista").hidden = ano !== "2026";
-  $("abrir-album").textContent = fotos.length ? `Álbum de fotos (${fotos.length})` : "Álbum de fotos";
+  const painel = document.querySelector(".painel");
+  painel.classList.toggle("compacto", ano !== "2026");
+  const LINHA = { "2024": ["Linha 4", "#0455A1", "#DCE8F5", "#C9DAEE"], "2025": ["Linha 5", "#D6403A", "#F8DEDB", "#F0CBC7"], "2026": ["Linha 6", "#D99A00", "#FBF1C9", "#F3E3A6"] }[ano] || ["Linha 6", "#D99A00", "#FBF1C9", "#F3E3A6"];
+  $("painel-linha").textContent = LINHA[0];
+  painel.style.setProperty("--destaque", LINHA[1]); painel.style.setProperty("--painel", LINHA[2]); painel.style.setProperty("--bandeja", LINHA[3]);
+  $("album-n").hidden = !fotos.length; $("album-n").textContent = fotos.length;
   if (manterVisiveis) document.querySelectorAll(".parada").forEach(p => p.classList.add("visivel"));
   observar(); atualizar();
 }
