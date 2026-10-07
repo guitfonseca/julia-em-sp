@@ -37,10 +37,17 @@
   :focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; }
   [hidden] { display: none !important; }
 
-  .som { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); right: 14px; z-index: 20; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--amarela); color: var(--tinta); display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 16px -8px #000; animation: aparecer .4s; }
+  .som { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); right: 14px; z-index: 20; height: 44px; min-width: 44px; padding: 0 16px 0 12px; border-radius: 999px; border: 0; background: var(--amarela); color: var(--tinta); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; box-shadow: 0 6px 16px -8px #000; animation: aparecer .4s; }
+  .som.iniciado, .som.compacto { padding: 0; justify-content: center; width: 44px; }
+  .som.iniciado .som-texto, .som.compacto .som-texto { display: none; }
+  .som.compacto:not(.iniciado) .ondas { display: none; }
+  .som.compacto:not(.iniciado) .mudo { display: inline; }
+  .som.compacto:not(.iniciado) { animation: aparecer .4s; }
+  .som:not(.iniciado) { animation: aparecer .4s, chamar 2s 1s infinite; }
+  @keyframes chamar { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,210,0,.7); } 60% { box-shadow: 0 0 0 12px rgba(255,210,0,0); } }
   .som .mudo { display: none; }
-  .som[aria-pressed="false"] .mudo { display: inline; }
-  .som[aria-pressed="false"] .ondas { display: none; }
+  .som.iniciado[aria-pressed="false"] .mudo { display: inline; }
+  .som.iniciado[aria-pressed="false"] .ondas { display: none; }
   .tela { min-height: 100dvh; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
   .saindo-tela { animation: sumir .6s forwards; }
   @keyframes sumir { to { opacity: 0; } }
@@ -54,9 +61,16 @@
   }
 
   /* ---------- 1. portão com senha ---------- */
-  #portao { display: grid; place-items: center; padding: 32px 24px; background: #E6E4DE; }
-  .portao-caixa { width: min(100%, 380px); text-align: center; animation: aparecer .6s; }
-  .portao-caixa .polaroid { --r: -3deg; width: 220px; margin: 0 auto 28px; padding: 8px 8px 34px; }
+  #portao { display: grid; place-items: center; padding: 32px 24px; background: #EEEDE8; position: relative; overflow: hidden; }
+  .fundo-linhas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .fundo-linhas path { fill: none; stroke-width: 26; stroke-linecap: round; stroke-linejoin: round; opacity: .22; stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: tracar-fundo 2.8s cubic-bezier(.5,0,.2,1) forwards; }
+  .fundo-linhas path:nth-child(2) { animation-delay: .2s; } .fundo-linhas path:nth-child(3) { animation-delay: .4s; }
+  .fundo-linhas path:nth-child(4) { animation-delay: .6s; } .fundo-linhas path:nth-child(5) { animation-delay: .8s; } .fundo-linhas path:nth-child(6) { animation-delay: 1s; }
+  @keyframes tracar-fundo { to { stroke-dashoffset: 0; } }
+  .fundo-estacoes circle { fill: #fff; stroke: #15181D; stroke-width: 6; opacity: 0; animation: aparecer .4s 2.2s forwards; }
+  .portao-caixa { position: relative; z-index: 1; background: rgba(252,251,248,.9); padding: 26px 22px 18px; border-radius: 14px; box-shadow: 0 20px 50px -30px #15181D; backdrop-filter: blur(4px); }
+  .portao-caixa { width: min(100%, 380px); text-align: center; animation: aparecer .6s; margin-top: 60px; }
+  .portao-caixa .polaroid { --r: -3deg; width: 200px; margin: -70px auto 24px; padding: 8px 8px 34px; }
   .portao-caixa .polaroid img { aspect-ratio: 4 / 5; object-fit: cover; width: 100%; }
   .portao-caixa h1 { margin: 0; font-size: 2.2rem; font-weight: 800; font-stretch: 70%; line-height: 1; }
   .portao-caixa label { display: block; margin: 10px 0 16px; color: var(--cinza); }
@@ -99,14 +113,22 @@
   .pergunta h2 span:nth-child(2) i { animation-delay: .12s; }
   @keyframes subir { from { transform: translateY(105%); } to { transform: none; } }
 
-  .cena { position: relative; height: 210px; overflow: hidden; background: linear-gradient(#111317, #23272D); }
-  .cena::after { /* borda da plataforma */
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
-    background: repeating-linear-gradient(90deg, var(--amarela) 0 14px, #E9C200 14px 16px);
-    box-shadow: 0 -2px 0 #0007;
-  }
+  .cena { position: relative; height: 262px; overflow: hidden; background: linear-gradient(#111317, #23272D); }
+  .chao { position: absolute; left: 0; right: 0; bottom: 0; height: 56px; z-index: 2;
+    background: linear-gradient(var(--amarela) 0 9px, #3A3F47 9px); box-shadow: 0 -3px 0 #0007; }
+  .chao::before { content: ""; position: absolute; left: 0; right: 0; top: 2px; height: 5px; background: repeating-linear-gradient(90deg, transparent 0 6px, #C9A400 6px 8px); }
+  .pessoas { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+  .pessoa { position: absolute; bottom: 12px; left: 0; width: 18px; height: 34px; }
+  .pessoa svg { width: 100%; height: 100%; overflow: visible; }
+  .pessoa .perna { transform-box: fill-box; transform-origin: top center; }
+  .pessoa.andando .perna.a { animation: passo .32s infinite alternate ease-in-out; }
+  .pessoa.andando .perna.b { animation: passo .32s infinite alternate-reverse ease-in-out; }
+  .pessoa.andando svg { animation: balanco .32s infinite alternate ease-in-out; }
+  @keyframes passo { from { transform: rotate(22deg); } to { transform: rotate(-22deg); } }
+  @keyframes balanco { to { transform: translateY(-1.5px); } }
+  .pessoa .rotulo-pessoa { position: absolute; bottom: 38px; left: 50%; transform: translateX(-50%); font-size: .68rem; font-weight: 800; color: #fff; background: var(--c, #15181D); padding: 0 6px; border-radius: 999px; white-space: nowrap; }
   .trem {
-    position: absolute; left: 6%; bottom: 30px; display: flex; gap: 6px;
+    position: absolute; left: 6%; bottom: 56px; display: flex; gap: 6px; z-index: 1;
     transform: translateX(110vw);
     transition: transform 2.6s cubic-bezier(.12,.7,.25,1);
   }
@@ -140,7 +162,10 @@
   .abertas .folha.e { transform: translateX(-100%); }
   .abertas .folha.d { transform: translateX(100%); }
   .embarque { padding: 26px 24px 40px; text-align: center; min-height: 112px; }
-  .embarque .botao { padding: 15px 34px; font-size: 1.05rem; opacity: 0; transform: translateY(8px); transition: opacity .5s, transform .5s; pointer-events: none; }
+  .botoes-embarque { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .botoes-embarque .botao { display: inline-flex; align-items: center; gap: 8px; }
+  .botao.claro-escuro { background: transparent; color: #fff; border: 2px solid #5A5F67; }
+  .embarque .botao { padding: 15px 30px; font-size: 1.05rem; opacity: 0; transform: translateY(8px); transition: opacity .5s, transform .5s; pointer-events: none; }
   .abertas ~ .embarque .botao, .embarque.pronto .botao { opacity: 1; transform: none; pointer-events: auto; }
   .embarque small { display: block; margin-top: 12px; color: #9DA2AA; }
 
@@ -251,6 +276,17 @@
   .quem { display: flex; gap: 16px; margin-top: 8px; font-size: .9rem; color: var(--cinza); }
   .quem span { display: inline-flex; align-items: center; gap: 6px; }
   .quem i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+  .parada.editavel { cursor: pointer; border-radius: 10px; }
+  .lado { display: flex; align-items: center; gap: 12px; }
+  .lado .foto img { width: 64px; height: 64px; }
+  .dica-form { font-size: .82rem; color: var(--cinza); margin: -4px 0 12px; }
+  .foto-atual { display: flex; align-items: center; gap: 10px; margin: -4px 0 12px; }
+  .foto-atual img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; }
+  .foto-atual button { background: none; border: 1.5px solid var(--trilho); border-radius: 999px; padding: 4px 12px; font-size: .82rem; font-weight: 600; cursor: pointer; }
+  .ficha input[type="file"] { padding: 8px; font-size: .9rem; }
+  #form-plano .ficha, #form-sorv .ficha { max-height: calc(100dvh - 40px); overflow-y: auto; }
+  .parada.editavel:hover { background: rgba(255,255,255,.45); }
+  .parada.dele.passou::before { background: var(--papel); }
   .parada.dela::before { border-color: var(--lilas) !important; background: var(--lilas) !important; }
   .parada.dela .nome { color: var(--lilas); }
   .selo-dela { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--lilas); color: #fff; font-size: .72rem; font-weight: 700; vertical-align: 2px; }
@@ -285,42 +321,52 @@
   .sorv-topo h2 { margin: 2px 0 0; font-size: clamp(2.2rem, 8vw, 3.6rem); font-weight: 800; font-stretch: 62%; line-height: .9; }
   .redondo.escuro { border-color: var(--tinta); color: var(--tinta); }
   .redondo.escuro:hover { background: #F3D3DC; }
-  .quem-avalia { display: flex; gap: 6px; margin-top: 22px; background: #F3D3DC; padding: 5px; border-radius: 999px; width: fit-content; margin-left: auto; margin-right: auto; }
-  .quem-avalia button { border: 0; background: transparent; padding: 9px 18px; border-radius: 999px; font-weight: 700; cursor: pointer; }
-  .quem-avalia button[aria-selected="true"] { background: var(--tinta); color: #fff; }
-  .quem-avalia button[data-quem="ju"][aria-selected="true"] { background: var(--lilas); }
-  .dica-sorv { text-align: center; color: #8A5566; font-size: .92rem; margin-top: 10px; }
-  .lista-sorv { list-style: none; padding: 0; margin-top: 18px; display: grid; gap: 14px; }
-  .sorv { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 6px 16px -12px #B03A5B; }
-  .sorv .polaroid { --r: -3deg; padding: 4px 4px 12px; }
-  .sorv .polaroid img, .sorv .sem-foto { width: 64px; height: 64px; object-fit: cover; }
-  .sorv .sem-foto { display: grid; place-items: center; background: #F3D3DC; font-size: 1.8rem; }
-  .sorv b { display: block; font-size: 1.1rem; }
+  .intro-sorv { color: #8A5566; margin-top: 10px; max-width: 52ch; }
+  .podios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; max-width: 1000px; }
+  .podio-card { background: #fff; border-radius: 16px; padding: 16px 12px 0; text-align: center; box-shadow: 0 10px 24px -18px #B03A5B; overflow: hidden; display: flex; flex-direction: column; }
+  .podio-card h3 { margin: 0 0 12px; font-size: 1.4rem; font-weight: 800; font-stretch: 70%; }
+  .podio-card.ju h3 { color: var(--lilas); } .podio-card.gui h3 { color: #B78900; } .podio-card.dois h3 { color: #E4567B; }
+  .podio { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 6px; margin-top: auto; min-height: 210px; }
+  .degrau { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+  .degrau .ft { border: 0; padding: 3px 3px 8px; background: var(--papel); cursor: zoom-in; box-shadow: 0 6px 12px -8px #000; width: 64px; }
+  .degrau .ft img, .degrau .ft .sem-foto { width: 100%; aspect-ratio: 1; object-fit: cover; display: grid; place-items: center; background: #F3D3DC; }
+  .degrau strong { font-size: .82rem; line-height: 1.15; min-height: 2.3em; overflow-wrap: anywhere; }
+  .degrau small { font-size: .74rem; color: var(--cinza); }
+  .bloco { width: 100%; border-radius: 8px 8px 0 0; color: #fff; font-weight: 800; font-stretch: 70%; font-size: 1.6rem; display: grid; place-items: center; transform-origin: bottom; animation: crescer .7s cubic-bezier(.2,1.2,.4,1) both; }
+  .degrau.p1 .bloco { height: 96px; animation-delay: .25s; } .degrau.p2 .bloco { height: 70px; animation-delay: .1s; } .degrau.p3 .bloco { height: 50px; animation-delay: .4s; }
+  .ju .bloco { background: var(--lilas); } .gui .bloco { background: #E0A800; } .dois .bloco { background: #E4567B; }
+  .degrau.vazio .bloco { background: #F1E3E8; color: #C9A9B4; }
+  @keyframes crescer { from { transform: scaleY(0); } }
+  .podio-msg { grid-column: 1 / -1; align-self: center; color: #8A5566; font-size: .92rem; padding: 0 8px 40px; }
+  .concordam { color: #8A5566; font-size: .88rem; margin: 10px 0 14px; }
+  .votacao { margin-top: 40px; }
+  .votacao h3 { font-size: 1.7rem; font-weight: 800; font-stretch: 70%; margin: 0; }
+  .quem-avalia { display: flex; align-items: center; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
+  .quem-avalia span { color: #8A5566; font-weight: 600; margin-right: 4px; }
+  .quem-avalia button { border: 2px solid var(--tinta); background: transparent; padding: 7px 20px; border-radius: 999px; font-weight: 700; cursor: pointer; }
+  .quem-avalia button[aria-selected="true"] { background: #E0A800; border-color: #E0A800; color: var(--tinta); }
+  .quem-avalia button[data-quem="ju"][aria-selected="true"] { background: var(--lilas); border-color: var(--lilas); color: #fff; }
+  .lista-sorv { list-style: none; padding: 0; margin-top: 16px; display: grid; gap: 12px; }
+  .sorv { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 6px 16px -12px #B03A5B; }
+  .sorv .ft { border: 0; padding: 4px 4px 12px; background: var(--papel); cursor: zoom-in; transform: rotate(-3deg); box-shadow: 0 6px 12px -8px #000; }
+  .sorv .ft img, .sorv .ft .sem-foto { width: 64px; height: 64px; object-fit: cover; display: grid; place-items: center; background: #F3D3DC; }
+  .sorv b { display: block; font-size: 1.05rem; }
   .sorv small { color: var(--cinza); }
+  .sorv .tirar { background: none; border: 1.5px solid var(--trilho); border-radius: 999px; padding: 4px 10px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+  .sorv .tirar.certeza { background: #B3261E; border-color: #B3261E; color: #fff; }
   .bolas { display: flex; gap: 6px; margin-top: 8px; }
-  .bola-nota { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #E4567B; background: #fff; cursor: pointer; padding: 0; transition: transform .2s cubic-bezier(.3,1.6,.5,1), background .2s; }
-  .bola-nota.cheia { background: #E4567B; }
-  .bola-nota.cheia.ju { background: var(--lilas); border-color: var(--lilas); }
+  .bola-nota { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #E0A800; background: #fff; cursor: pointer; padding: 0; transition: transform .2s cubic-bezier(.3,1.6,.5,1), background .2s; }
+  .bola-nota.cheia { background: #E0A800; }
   .bolas.ju .bola-nota { border-color: var(--lilas); }
+  .bolas.ju .bola-nota.cheia { background: var(--lilas); }
   .bola-nota:hover { transform: scale(1.12); }
   .bola-nota.estalo { animation: estalo .35s; }
   @keyframes estalo { 50% { transform: scale(1.35); } }
-  .podio-area { margin-top: 38px; text-align: center; }
-  .podio-area h3 { font-size: 1.7rem; font-weight: 800; font-stretch: 70%; margin: 0 0 18px; }
-  .podio { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 10px; max-width: 460px; margin: 0 auto; }
-  .degrau { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .degrau .polaroid { --r: 0deg; padding: 4px 4px 10px; width: 78px; }
-  .degrau .polaroid img, .degrau .sem-foto { width: 100%; aspect-ratio: 1; object-fit: cover; }
-  .degrau .sem-foto { display: grid; place-items: center; background: #F3D3DC; font-size: 1.8rem; }
-  .degrau strong { font-size: .95rem; line-height: 1.15; min-height: 2.3em; }
-  .bloco { width: 100%; border-radius: 8px 8px 0 0; background: var(--tinta); color: #fff; font-weight: 800; font-stretch: 70%; font-size: 1.8rem; display: grid; place-items: center; transform-origin: bottom; animation: crescer .7s cubic-bezier(.2,1.2,.4,1) both; }
-  .degrau.p1 .bloco { height: 120px; background: #E4567B; animation-delay: .25s; }
-  .degrau.p2 .bloco { height: 86px; animation-delay: .1s; }
-  .degrau.p3 .bloco { height: 62px; background: #8A5566; animation-delay: .4s; }
-  @keyframes crescer { from { transform: scaleY(0); } }
-  .podio-vazio { grid-column: 1 / -1; color: #8A5566; }
-  .concordam { color: #8A5566; margin-top: 14px; }
+  .nova-sorv { width: 100%; margin-top: 12px; padding: 16px; border: 2px dashed #E4567B; border-radius: 12px; background: transparent; color: #B03A5B; font-weight: 700; cursor: pointer; }
+  .nova-sorv span { font-size: 1.3rem; vertical-align: -2px; margin-right: 4px; }
+  .nova-sorv:hover { background: #F7DCE4; }
   .sorv-acoes { text-align: center; margin-top: 34px; }
+  @media (max-width: 760px) { .podios { grid-template-columns: 1fr; } .podio { min-height: 190px; } }
 
   .palco.palco-album { place-items: stretch; grid-template-rows: auto minmax(0, 1fr); background: rgba(14,16,19,.97); }
   .grade { overflow-y: auto; padding: 18px 6px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 26px 20px; align-content: start; max-width: 1040px; width: 100%; margin: 0 auto; }
@@ -363,7 +409,6 @@
     .foto img { width: 74px; height: 74px; }
     .parada, .dia { padding-left: 46px; }
     .sugestao { margin-left: 46px; }
-    .cena { height: 190px; }
     .vagao { transform-origin: bottom left; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -375,12 +420,22 @@
 <body data-ano="2024">
 
 <audio id="trilha" src="musica/linha4.mp3" preload="auto" loop></audio>
-<button class="som" id="som" type="button" aria-label="Desligar a música" aria-pressed="true" hidden>
+<button class="som" id="som" type="button" aria-label="Tocar música" aria-pressed="false" hidden>
   <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="ondas" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mudo" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <span class="som-texto">Tocar música</span>
 </button>
 
 <!-- 1. senha -->
 <section class="tela" id="portao">
+  <svg class="fundo-linhas" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path stroke="#0455A1" d="M-20 140 H120 L260 280 V820"/>
+    <path stroke="#00855F" d="M420 90 H300 L160 230 V420 L60 520 H-20"/>
+    <path stroke="#E2231A" d="M-20 640 L140 480 H420"/>
+    <path stroke="#F2B705" d="M330 -20 V180 L420 270"/>
+    <path stroke="#8E44AD" d="M40 -20 V60 L120 140"/>
+    <path stroke="#E4567B" d="M420 600 L300 720 V820"/>
+    <g class="fundo-estacoes"><circle cx="120" cy="140" r="11"/><circle cx="260" cy="280" r="11"/><circle cx="160" cy="230" r="11"/><circle cx="140" cy="480" r="11"/><circle cx="330" cy="180" r="11"/><circle cx="300" cy="720" r="11"/><circle cx="160" cy="420" r="11"/></g>
+  </svg>
   <form class="portao-caixa" id="form-senha" autocomplete="off">
     <div class="polaroid"><img src="fotos/27-aleatoria.jpg" alt="Nós dois, numa foto engraçada"></div>
     <h1>Antes de embarcar</h1>
@@ -417,9 +472,14 @@
         <span class="porta"><span class="folha e"></span><span class="folha d"></span></span>
       </div>
     </div>
+    <div class="chao" aria-hidden="true"></div>
+    <div class="pessoas" id="pessoas" aria-hidden="true"></div>
   </div>
   <div class="embarque" id="embarque">
-    <button class="botao amarelo" id="embarcar" type="button">Embarcar</button>
+    <div class="botoes-embarque">
+      <button class="botao amarelo" id="embarcar-som" type="button"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Embarcar com som</button>
+      <button class="botao claro-escuro" id="embarcar" type="button">Embarcar sem som</button>
+    </div>
     <small>Próximas estações: 2024, 2025 e 2026</small>
   </div>
 </section>
@@ -502,6 +562,7 @@
       <button class="botao" id="abrir-album" type="button">Álbum de fotos</button>
       <button class="botao lilas" id="participar" type="button" hidden>Participar da lista</button>
       <button class="botao claro" id="compartilhar-roteiro" type="button" hidden>Compartilhar roteiro</button>
+      <button class="botao amarelo" id="sugerir" type="button" hidden>Importante, não esquecer de:</button>
     </div>
   </header>
   <main id="conteudo"></main>
@@ -527,6 +588,7 @@
     <span></span>
     <form class="ficha" id="ficha" autocomplete="off">
       <h3 id="ficha-titulo">O que você quer fazer?</h3>
+      <label>Quem está colocando<select name="autor"><option value="ju">Jú</option><option value="gui">Gui</option></select></label>
       <label>Título<input name="titulo" required maxlength="80" placeholder="Ex.: Feirinha da Benedito Calixto"></label>
       <div class="dupla">
       <label>Dia<select name="dia"><option value="Sexta">Sexta</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option><option value="Segunda">Segunda</option></select></label>
@@ -534,6 +596,10 @@
       </div>
       <label>Descrição<textarea name="descricao" rows="3" maxlength="300" placeholder="Por que vale a pena, o que comer, quem chamar..."></textarea></label>
       <label>Localização<input name="local" maxlength="120" placeholder="Endereço ou nome do lugar"></label>
+      <label>Foto (opcional)<input type="file" name="foto" accept="image/*"></label>
+      <div class="foto-atual" id="foto-atual" hidden><img alt=""><button type="button" id="remover-foto">Remover foto</button></div>
+      <label>Nome da foto<input name="fotoNome" maxlength="80" placeholder="Ex.: nós dois no Matiz"></label>
+      <p class="dica-form">Se for sorvete, escreva "sorvete" ou "sorveteria" no título que ele entra sozinho no ranking das sorveterias. A foto vai pro álbum de 2026.</p>
       <p class="erro" id="ficha-erro" aria-live="polite"></p>
       <div class="ficha-botoes"><button class="botao claro" type="button" data-fechar>Cancelar</button><button class="botao lilas" type="submit" id="ficha-salvar">Salvar</button></div>
     </form>
@@ -564,22 +630,40 @@
       <div><small>Linha rosa</small><h2>Ranking das sorveterias</h2></div>
       <button class="redondo p escuro" data-fechar aria-label="Fechar">✕</button>
     </header>
-    <div class="quem-avalia" role="tablist" aria-label="Quem está avaliando">
-      <button role="tab" data-quem="ju" aria-selected="true">Notas da Jú</button>
-      <button role="tab" data-quem="gui" aria-selected="false">Notas do Gui</button>
-    </div>
-    <p class="dica-sorv">Toque nas bolas pra dar de 1 a 5. O pódio se monta sozinho.</p>
-    <ol class="lista-sorv" id="lista-sorv"></ol>
-    <section class="podio-area">
-      <h3 id="podio-titulo">Top 3 da Jú</h3>
-      <div class="podio" id="podio"></div>
+    <p class="intro-sorv">Cada um dá de 1 a 5 bolas pra cada sorveteria. O pódio de cada um se monta aqui em cima, e o dos dois aparece quando os dois tiverem votado.</p>
+
+    <section class="podios">
+      <div class="podio-card ju"><h3>Top 3 da Jú</h3><div class="podio" id="podio-ju"></div></div>
+      <div class="podio-card gui"><h3>Top 3 do Gui</h3><div class="podio" id="podio-gui"></div></div>
+      <div class="podio-card dois"><h3>Top 3 dos dois</h3><div class="podio" id="podio-dois"></div><p class="concordam" id="concordam"></p></div>
     </section>
-    <section class="podio-area" id="combinado-area">
-      <h3>Top 3 dos dois</h3>
-      <div class="podio" id="podio-combinado"></div>
-      <p class="concordam" id="concordam"></p>
+
+    <section class="votacao">
+      <h3>Dar notas</h3>
+      <div class="quem-avalia" role="tablist" aria-label="Quem está votando">
+        <span>Quem está votando?</span>
+        <button role="tab" data-quem="ju" aria-selected="true">Jú</button>
+        <button role="tab" data-quem="gui" aria-selected="false">Gui</button>
+      </div>
+      <ol class="lista-sorv" id="lista-sorv"></ol>
+      <button class="nova-sorv" id="add-sorv" type="button"><span>+</span> Adicionar sorveteria</button>
     </section>
     <div class="sorv-acoes"><button class="botao rosa" id="compartilhar-ranking" type="button">Compartilhar resultados</button></div>
+  </div>
+</dialog>
+
+<dialog id="form-sorv" aria-label="Nova sorveteria">
+  <div class="palco">
+    <span></span>
+    <form class="ficha" id="ficha-sorv" autocomplete="off">
+      <h3>Nova sorveteria</h3>
+      <label>Nome<input name="nome" required maxlength="60" placeholder="Ex.: Bacio di Latte"></label>
+      <label>Quando vocês foram<input name="quando" maxlength="40" value="Outubro de 2026"></label>
+      <label>Foto (opcional)<input type="file" name="foto" accept="image/*"></label>
+      <p class="erro" id="sorv-erro" aria-live="polite"></p>
+      <div class="ficha-botoes"><button class="botao claro" type="button" data-fechar>Cancelar</button><button class="botao rosa" type="submit" id="sorv-salvar">Adicionar</button></div>
+    </form>
+    <span></span>
   </div>
 </dialog>
 
@@ -717,27 +801,12 @@ const ANOS = {
     visitas: [
       {
         titulo: "Outubro de 2026", cor: "#F2B705",
-        nota: "Ideias pro feriadão de 9 a 12. As estações ficam vazias até a gente passar por elas.",
+        nota: "Toque em qualquer item pra editar. As estações ficam vazias até a gente passar por elas.",
         dias: [
-          { dia: "Sexta", lugares: [
-            { nome: "Prédio novo do MASP", feito: false, nota: "noite, grátis das 18h às 21h", mapa: "MASP Edifício Pietro Maria Bardi" },
-            { nome: "Matiz", feito: false, nota: "noite", mapa: "Matiz bar Rua Martins Fontes 91 São Paulo" },
-            { nome: "Tokyo", feito: false, nota: "noite, karaokê e rooftop", mapa: "Tokyo Rua Major Sertório 110 São Paulo" }
-          ]},
-          { dia: "Sábado", lugares: [
-            { nome: "Instituto Tomie Ohtake", feito: false, nota: "tarde" },
-            { nome: "Heavy House", feito: false, nota: "noite", mapa: "Heavy House Rua Benjamin Egas 297 São Paulo" }
-          ]},
-          { dia: "Domingo", lugares: [
-            { nome: "Theatro Municipal", feito: false, nota: "manhã", mapa: "Theatro Municipal de São Paulo" },
-            { nome: "Farol Santander", feito: false, nota: "tarde" },
-            { nome: "Conceição Discos", feito: false, nota: "tarde" },
-            { nome: "Balsa Bar", feito: false, nota: "fim de tarde" },
-            { nome: "Iccarus", feito: false, nota: "noite, no topo do Mirante do Vale", mapa: "Iccarus Mirante do Vale São Paulo" }
-          ]},
-          { dia: "Segunda", lugares: [
-            { nome: "Braz Elétrica", feito: false, nota: "almoço antes de ela ir embora", mapa: "Braz Elétrica São Paulo" }
-          ]}
+          { dia: "Sexta", lugares: [] },
+          { dia: "Sábado", lugares: [] },
+          { dia: "Domingo", lugares: [] },
+          { dia: "Segunda", lugares: [] }
         ]
       }
     ]
@@ -745,7 +814,7 @@ const ANOS = {
 };
 
 
-const SRC = f => (typeof FOTOS !== "undefined" ? FOTOS[f] : "fotos/" + f);
+const SRC = f => (/^(data:|blob:|\/_blob\/)/.test(f) ? f : (typeof FOTOS !== "undefined" ? FOTOS[f] : "fotos/" + f));
 const mapaURL = q => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
 const giro = i => [2.5, -3, 1.5, -2, 3, -1.5][i % 6] + "deg";
 const $ = id => document.getElementById(id);
@@ -760,7 +829,6 @@ $("form-senha").addEventListener("submit", e => {
   const form = $("form-senha");
   if (r.includes("amarel")) {
     $("erro").textContent = "";
-    tocarTrilha();
     form.classList.add("liberado");
     setTimeout(() => trocarTela("portao", "plataforma", chegarTrem), semMovimento ? 0 : 650);
   } else {
@@ -771,16 +839,23 @@ $("form-senha").addEventListener("submit", e => {
 
 /* música: coloque o arquivo em musica/linha4.mp3; sem o arquivo, o site segue em silêncio */
 const trilha = $("trilha");
-function tocarTrilha() {
+let temMusica = true;
+trilha.addEventListener("error", () => { temMusica = false; });
+function ligarMusica() {
+  const b = $("som");
   trilha.volume = 0.55;
-  const p = trilha.play();
-  if (p && p.then) p.then(() => { $("som").hidden = false; }).catch(() => {});
+  return trilha.play().then(() => {
+    b.hidden = false; b.classList.add("iniciado"); b.setAttribute("aria-pressed", "true"); b.setAttribute("aria-label", "Desligar a música");
+  }).catch(() => {});
 }
+function mostrarBotaoSom() { if (!trilha.error) $("som").hidden = false; }
 $("som").addEventListener("click", () => {
-  const ligado = $("som").getAttribute("aria-pressed") === "true";
+  const b = $("som");
+  if (!b.classList.contains("iniciado")) { ligarMusica(); return; }
+  const ligado = b.getAttribute("aria-pressed") === "true";
   if (ligado) trilha.pause(); else trilha.play().catch(() => {});
-  $("som").setAttribute("aria-pressed", ligado ? "false" : "true");
-  $("som").setAttribute("aria-label", ligado ? "Ligar a música" : "Desligar a música");
+  b.setAttribute("aria-pressed", ligado ? "false" : "true");
+  b.setAttribute("aria-label", ligado ? "Ligar a música" : "Desligar a música");
 });
 
 function trocarTela(de, para, depois) {
@@ -795,18 +870,89 @@ function trocarTela(de, para, depois) {
 }
 
 /* ---------- 2. trem ---------- */
+/* bonequinhos na plataforma */
+const ROUPAS = ["#E4567B", "#0455A1", "#00855F", "#F2B705", "#E2231A", "#8E44AD", "#F28C28", "#5A6B7B"];
+const PELES = ["#F1C9A5", "#C68E62", "#8D5A3B", "#E8B48A", "#5B3A29"];
+function criarPessoa(x, roupa, rotulo) {
+  const p = document.createElement("div");
+  p.className = "pessoa";
+  const pele = PELES[Math.floor(Math.random() * PELES.length)];
+  const calca = ["#2B2F36", "#3B4A6B", "#4A3B2B"][Math.floor(Math.random() * 3)];
+  p.innerHTML = `${rotulo ? `<span class="rotulo-pessoa" style="--c:${roupa}">${rotulo}</span>` : ""}
+    <svg viewBox="0 0 18 34"><line class="perna a" x1="7" y1="22" x2="7" y2="33" stroke="${calca}" stroke-width="3.2" stroke-linecap="round"/>
+    <line class="perna b" x1="11" y1="22" x2="11" y2="33" stroke="${calca}" stroke-width="3.2" stroke-linecap="round"/>
+    <rect x="3" y="10" width="12" height="14" rx="5" fill="${roupa}"/><circle cx="9" cy="5" r="4.6" fill="${pele}"/></svg>`;
+  p.style.transform = `translateX(${x}px)`;
+  p.dataset.x = x;
+  $("pessoas").appendChild(p);
+  return p;
+}
+function portasVisiveis() {
+  const c = $("cena").getBoundingClientRect();
+  return [...$("cena").querySelectorAll(".porta")].map(d => d.getBoundingClientRect())
+    .filter(r => r.left > c.left + 6 && r.right < c.right - 6).map(r => r.left - c.left + r.width / 2 - 9);
+}
+function andarAte(p, xFinal, velocidade = 110) {
+  const x0 = +p.dataset.x, dist = Math.abs(xFinal - x0);
+  const dur = Math.max(250, dist / velocidade * 1000);
+  const virar = xFinal < x0 ? " scaleX(-1)" : "";
+  p.classList.add("andando");
+  const a = p.animate([{ transform: `translateX(${x0}px)${virar}` }, { transform: `translateX(${xFinal}px)${virar}` }], { duration: dur, easing: "linear", fill: "forwards" });
+  return a.finished.then(() => { p.dataset.x = xFinal; });
+}
+function entrar(p) {
+  const x = +p.dataset.x;
+  p.classList.remove("andando");
+  return p.animate([{ transform: `translateX(${x}px)`, opacity: 1 }, { transform: `translate(${x}px, -26px) scale(.8)`, opacity: 0 }], { duration: 420, easing: "ease-in", fill: "forwards" })
+    .finished.then(() => p.remove());
+}
+let esperando = [];
+function povoarPlataforma() {
+  $("pessoas").innerHTML = "";
+  const w = $("cena").clientWidth;
+  const n = w < 500 ? 5 : 8;
+  esperando = Array.from({ length: n }, (_, i) => criarPessoa(Math.round((i + 0.5) * w / n + (Math.random() * 30 - 15)), ROUPAS[i % ROUPAS.length]));
+}
+function embarcarPassageiros() {
+  const portas = portasVisiveis();
+  if (!portas.length) return;
+  esperando.forEach((p, i) => {
+    const x = +p.dataset.x;
+    const alvo = portas.reduce((m, d) => Math.abs(d - x) < Math.abs(m - x) ? d : m, portas[0]);
+    setTimeout(() => andarAte(p, alvo).then(() => entrar(p)), 150 + i * 220);
+  });
+  esperando = [];
+}
 function chegarTrem() {
   const cena = $("plataforma");
+  mostrarBotaoSom();
+  if (!semMovimento) povoarPlataforma();
   requestAnimationFrame(() => requestAnimationFrame(() => cena.classList.add("chegou")));
-  setTimeout(() => { $("cena").classList.add("abertas"); $("embarque").classList.add("pronto"); }, semMovimento ? 0 : 2700);
+  setTimeout(() => {
+    $("cena").classList.add("abertas");
+    if (!semMovimento) setTimeout(embarcarPassageiros, 500);
+    setTimeout(() => $("embarque").classList.add("pronto"), semMovimento ? 0 : 900);
+  }, semMovimento ? 0 : 2700);
 }
-$("embarcar").addEventListener("click", () => {
+$("embarcar-som").addEventListener("click", () => { ligarMusica(); embarcar(); });
+$("embarcar").addEventListener("click", () => embarcar());
+let embarcando = false;
+async function embarcar() {
+  if (embarcando) return; embarcando = true;
   const cena = $("plataforma");
-  $("cena").classList.remove("abertas");
   $("embarque").classList.remove("pronto");
+  if (!semMovimento) {
+    const portas = portasVisiveis();
+    if (portas.length) {
+      const porta = portas[0];
+      const ju = criarPessoa(porta - 150, "#8E44AD", "Jú"), gui = criarPessoa(porta - 190, "#F2B705", "Gui");
+      await Promise.all([andarAte(ju, porta, 170).then(() => entrar(ju)), new Promise(r => setTimeout(r, 120)).then(() => andarAte(gui, porta, 170)).then(() => entrar(gui))]);
+    }
+  }
+  $("cena").classList.remove("abertas");
   setTimeout(() => cena.classList.add("partiu"), semMovimento ? 0 : 750);
-  setTimeout(() => trocarTela("plataforma", "mapa", mostrarMapa), semMovimento ? 0 : 1900);
-});
+  setTimeout(() => { $("som").classList.add("compacto"); $("som").setAttribute("aria-label", "Ligar a música"); trocarTela("plataforma", "mapa", mostrarMapa); }, semMovimento ? 0 : 1900);
+}
 
 /* ---------- mapa ---------- */
 const rede = $("rede");
@@ -883,13 +1029,10 @@ function desenhar(ano, manterVisiveis) {
     const ordem = { "manhã": 0, "tarde": 1, "noite": 2 };
     v.dias.forEach(d => {
       html += `<li class="dia">${d.dia}</li>` + d.lugares.map(l => parada(l)).join("");
-      if (ano === "2026") html += planos.filter(p => (p.dia || "Sexta") === d.dia)
-        .sort((a, b) => (ordem[a.horario] ?? 3) - (ordem[b.horario] ?? 3) || (a.criado || 0) - (b.criado || 0))
-        .map(paradaDela).join("");
+      if (ano === "2026") html += planosDoDia(d.dia).map(paradaPlano).join("");
     });
     html += `</ol></section>`;
   });
-  if (ano === "2026") html += `<div class="sugestao"><button class="botao amarelo" id="sugerir" type="button">Importante, não esquecer de:</button></div>`;
   const sorvetes = ANOS[ano].visitas.flatMap(v => v.dias.flatMap(d => d.lugares)).filter(l => l.sorvete && l.feito !== false).length;
   if (sorvetes) html += `<p class="rodape">Sorveterias em ${ano}: ${sorvetes}.</p>`;
   conteudo.innerHTML = html;
@@ -898,6 +1041,7 @@ function desenhar(ano, manterVisiveis) {
   $("resumo-ano").textContent = { "2024": "Duas visitas, duas linhas.", "2025": "Uma visita em clima de Natal.", "2026": "A próxima viagem, de 9 a 12 de outubro." }[ano];
   $("participar").hidden = ano !== "2026";
   $("compartilhar-roteiro").hidden = ano !== "2026";
+  $("sugerir").hidden = ano !== "2026";
   $("abrir-album").textContent = fotos.length ? `Álbum de fotos (${fotos.length})` : "Álbum de fotos";
   if (manterVisiveis) document.querySelectorAll(".parada").forEach(p => p.classList.add("visivel"));
   observar(); atualizar();
@@ -932,21 +1076,66 @@ window.addEventListener("resize", atualizar);
 /* ---------- sugestões da Jú (2026) ---------- */
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 let planos = [];
-function paradaDela(p) {
+const ORDEM_HORA = { "manhã": 0, "tarde": 1, "noite": 2 };
+const planosDoDia = dia => planos.filter(p => (p.dia || "Sexta") === dia)
+  .sort((a, b) => (ORDEM_HORA[a.horario] ?? 3) - (ORDEM_HORA[b.horario] ?? 3) || (a.criado || 0) - (b.criado || 0));
+function paradaPlano(p) {
+  const dela = p.autor !== "gui";
+  let foto = "";
+  if (p.foto) {
+    const i = fotos.length;
+    fotos.push({ f: p.foto, nome: p.fotoNome || p.titulo, consulta: p.local ? p.local + " São Paulo" : null });
+    foto = `<button class="foto polaroid" style="--r:${giro(i)}" data-i="${i}" aria-label="Ampliar foto: ${esc(p.fotoNome || p.titulo)}"><img src="${p.foto}" alt=""></button>`;
+  }
   const extra = [esc(p.horario), p.local ? `<a href="${mapaURL(p.local + " São Paulo")}" target="_blank" rel="noopener">${esc(p.local)}</a>` : ""].filter(Boolean).join(" · ");
-  return `<li class="parada aberta dela visivel" data-id="${esc(p.id)}">
-    <div><span class="nome">${esc(p.titulo)}</span><span class="selo-dela">Jú</span>
+  return `<li class="parada aberta editavel ${dela ? "dela" : "dele"} visivel" data-id="${esc(p.id)}">
+    <div><span class="nome">${esc(p.titulo)}</span>${dela ? '<span class="selo-dela">Jú</span>' : ""}
     <span class="extra">${extra}</span>${p.descricao ? `<span class="descricao">${esc(p.descricao)}</span>` : ""}</div>
-    <div class="mexer"><button type="button" data-editar="${esc(p.id)}">Editar</button><button type="button" data-apagar="${esc(p.id)}">Apagar</button></div></li>`;
+    <div class="lado">${foto}<div class="mexer"><button type="button" data-editar="${esc(p.id)}">Editar</button><button type="button" data-apagar="${esc(p.id)}">Apagar</button></div></div></li>`;
 }
-function redesenhar2026() { if (anoAtual === "2026" && !$("viagem").hidden) desenhar("2026", true); }
+function redesenhar2026() {
+  if (anoAtual === "2026" && !$("viagem").hidden) desenhar("2026", true);
+  if ($("sorvetes") && $("sorvetes").open) desenharSorvetes();
+}
 
 /* guarda as sugestões: lista compartilhada quando aberta pelo Claude; senão, neste aparelho */
 const CHAVE = "julia-sp-planos-2026";
+const CHAVE_SEMENTE = "julia-sp-semente-2026-v2";
+const SEMENTES = [
+  ["Sexta", "noite", "Prédio novo do MASP", "grátis das 18h às 21h", "MASP Avenida Paulista"],
+  ["Sexta", "noite", "Matiz", "", "Rua Martins Fontes, 91"],
+  ["Sexta", "noite", "Central 1926", "funk", "Central 1926"],
+  ["Sexta", "noite", "Tokyo", "karaokê e rooftop", "Rua Major Sertório, 110"],
+  ["Sábado", "tarde", "Almoço na Casa do Porco", "sugestão: chegar cedo, costuma ter fila", "A Casa do Porco"],
+  ["Sábado", "tarde", "Sesc 14 Bis", "", "Sesc 14 Bis"],
+  ["Sábado", "tarde", "Instituto Tomie Ohtake", "", "Instituto Tomie Ohtake"],
+  ["Sábado", "noite", "Heavy House", "", "Rua Benjamin Egas, 297"],
+  ["Domingo", "manhã", "Theatro Municipal", "", "Theatro Municipal de São Paulo"],
+  ["Domingo", "tarde", "Farol Santander", "", "Farol Santander"],
+  ["Domingo", "tarde", "Conceição Discos", "", "Conceição Discos"],
+  ["Domingo", "tarde", "Balsa Bar", "fim de tarde", "Balsa Bar"],
+  ["Domingo", "noite", "Iccarus", "no topo do Mirante do Vale", "Mirante do Vale"],
+  ["Segunda", "tarde", "Braz Elétrica", "almoço antes de ela ir embora", "Braz Elétrica"]
+].map(([dia, horario, titulo, descricao, local], i) => ({ id: "gui-" + (i + 1), dia, horario, titulo, descricao, local, autor: "gui", criado: i + 1 }));
 const armazem = {
   db: null,
-  local() { try { planos = JSON.parse(localStorage.getItem(CHAVE)) || []; } catch (e) { planos = []; } },
-  gravar() { try { localStorage.setItem(CHAVE, JSON.stringify(planos)); } catch (e) {} },
+  local() {
+    try { planos = JSON.parse(localStorage.getItem(CHAVE)) || []; } catch (e) { planos = []; }
+    let semeado = false; try { semeado = localStorage.getItem(CHAVE_SEMENTE) === "1"; } catch (e) {}
+    if (!semeado) {
+      planos = planos.filter(p => !String(p.id).startsWith("gui-")).concat(SEMENTES);
+      this.gravar(); try { localStorage.setItem(CHAVE_SEMENTE, "1"); } catch (e) {}
+    }
+  },
+  async semearDb(db) {
+    try {
+      const flag = await db.doc("config/semente-v2").get();
+      if (flag.exists) return;
+      for (const s of SEMENTES) { const { id, ...dados } = s; await db.doc("planos/" + id).set(dados); }
+      await db.doc("config/semente-v2").set({ em: Date.now() });
+    } catch (e) {}
+  },
+  gravar() { try { localStorage.setItem(CHAVE, JSON.stringify(planos)); return true; } catch (e) { return false; } },
   async iniciar() {
     this.local();
     try {
@@ -955,6 +1144,7 @@ const armazem = {
       if (!db) return;
       this.db = db;
       setTimeout(ligarNotasCompartilhadas, 0);
+      this.semearDb(db);
       db.collection("planos").onSnapshot(s => {
         planos = s.docs.map(d => ({ id: d.id, ...d.data() }));
         redesenhar2026();
@@ -968,9 +1158,11 @@ const armazem = {
       else await this.db.collection("planos").add(dados);
       return;
     }
+    const antes = planos;
     if (id) planos = planos.map(x => x.id === id ? { id, ...dados } : x);
     else planos.push({ id: "p" + Date.now(), ...dados });
-    this.gravar(); redesenhar2026();
+    if (!this.gravar()) { planos = antes; throw new Error("cheio"); }
+    redesenhar2026();
   },
   async apagar(id) {
     if (this.db) { await this.db.doc("planos/" + id).delete(); return; }
@@ -979,14 +1171,47 @@ const armazem = {
 };
 armazem.iniciar();
 
-let editando = null;
+/* reduz a foto pra caber no armazenamento (até ~150 KB) */
+function comprimirFoto(arquivo) {
+  return new Promise((ok, falha) => {
+    const img = new Image();
+    const url = URL.createObjectURL(arquivo);
+    img.onload = () => {
+      let lado = 900, q = 0.72, data = "";
+      for (let tentativa = 0; tentativa < 5; tentativa++) {
+        const k = Math.min(1, lado / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        data = c.toDataURL("image/jpeg", q);
+        if (data.length < 150000) break;
+        lado *= 0.8; q = Math.max(0.5, q - 0.06);
+      }
+      URL.revokeObjectURL(url); ok(data);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); falha(new Error("foto")); };
+    img.src = url;
+  });
+}
+
+let editando = null, removerFoto = false;
+function mostrarFotoAtual(src) {
+  const box = $("foto-atual");
+  box.hidden = !src;
+  if (src) box.querySelector("img").src = src;
+}
+$("remover-foto").addEventListener("click", () => { removerFoto = true; mostrarFotoAtual(null); });
 function abrirFicha(p) {
   editando = p || null;
   const f = $("ficha");
   f.reset();
   $("ficha-erro").textContent = "";
-  $("ficha-titulo").textContent = p ? "Editar sugestão" : "O que você quer fazer?";
+  $("ficha-titulo").textContent = p ? "Editar item" : "O que você quer fazer?";
   $("ficha-salvar").textContent = p ? "Salvar alterações" : "Adicionar à lista";
+  f.autor.value = p ? (p.autor === "gui" ? "gui" : "ju") : "ju";
+  removerFoto = false;
+  mostrarFotoAtual(p && p.foto);
+  f.fotoNome.value = (p && p.fotoNome) || "";
   if (p) { f.dia.value = p.dia || "Sexta"; f.titulo.value = p.titulo || ""; f.horario.value = p.horario || "manhã"; f.descricao.value = p.descricao || ""; f.local.value = p.local || ""; }
   $("form-plano").showModal();
   setTimeout(() => f.titulo.focus(), 50);
@@ -997,18 +1222,28 @@ $("ficha").addEventListener("submit", async e => {
   const f = e.target;
   const titulo = f.titulo.value.trim();
   if (!titulo) { $("ficha-erro").textContent = "Dá um nome pra sugestão."; return; }
-  const p = { titulo, dia: f.dia.value, horario: f.horario.value, descricao: f.descricao.value.trim(), local: f.local.value.trim(), criado: editando?.criado || Date.now() };
+  const p = { titulo, autor: f.autor.value, dia: f.dia.value, horario: f.horario.value, descricao: f.descricao.value.trim(), local: f.local.value.trim(), criado: editando?.criado || Date.now() };
   if (editando) p.id = editando.id;
+  p.fotoNome = f.fotoNome.value.trim();
   $("ficha-salvar").disabled = true;
-  try { await armazem.salvar(p); $("form-plano").close(); }
-  catch (err) { $("ficha-erro").textContent = "Não deu pra salvar agora. Tenta de novo em instantes."; }
+  try {
+    if (f.foto.files && f.foto.files[0]) { $("ficha-erro").textContent = "Preparando a foto..."; p.foto = await comprimirFoto(f.foto.files[0]); }
+    else if (editando && editando.foto && !removerFoto) p.foto = editando.foto;
+    $("ficha-erro").textContent = "";
+    await armazem.salvar(p); $("form-plano").close();
+  }
+  catch (err) { $("ficha-erro").textContent = err && err.message === "cheio" ? "Sem espaço pra mais fotos neste aparelho. Tenta uma foto menor ou sem foto." : "Não deu pra salvar agora. Tenta de novo em instantes."; }
   $("ficha-salvar").disabled = false;
 });
 conteudo.addEventListener("click", async e => {
   const ed = e.target.closest("[data-editar]");
   if (ed) { abrirFicha(planos.find(p => p.id === ed.dataset.editar)); return; }
   const ap = e.target.closest("[data-apagar]");
-  if (!ap) return;
+  if (!ap) {
+    const linha = e.target.closest(".parada.editavel");
+    if (linha && !e.target.closest("a, button")) abrirFicha(planos.find(p => p.id === linha.dataset.id));
+    return;
+  }
   if (!ap.classList.contains("certeza")) {
     ap.classList.add("certeza"); ap.textContent = "Apagar mesmo?";
     setTimeout(() => { ap.classList.remove("certeza"); ap.textContent = "Apagar"; }, 3000);
@@ -1035,26 +1270,38 @@ $("comp-copiar").addEventListener("click", async () => {
   }
 });
 $("compartilhar-roteiro").addEventListener("click", () => {
-  const ordem = { "manhã": 0, "tarde": 1, "noite": 2 };
   let txt = "🚇 Jú em São Paulo\nFeriadão de 9 a 12 de outubro\n";
   ANOS["2026"].visitas[0].dias.forEach(d => {
-    const meus = d.lugares.map(l => `• ${l.nome}${l.nota ? ` (${l.nota})` : ""}`);
-    const dela = planos.filter(p => (p.dia || "Sexta") === d.dia)
-      .sort((a, b) => (ordem[a.horario] ?? 3) - (ordem[b.horario] ?? 3))
-      .map(p => `• ${p.titulo} (${p.horario}${p.local ? ", " + p.local : ""}) ★ ideia da Jú`);
-    const itens = meus.concat(dela);
+    const itens = planosDoDia(d.dia).map(p => {
+      const local = p.local && !p.titulo.toLowerCase().includes(p.local.toLowerCase()) && !p.local.toLowerCase().includes(p.titulo.toLowerCase()) ? p.local : "";
+      return `• ${p.titulo} (${[p.horario, p.descricao, local].filter(Boolean).join(", ")})${p.autor !== "gui" ? " ★ ideia da Jú" : ""}`;
+    });
     if (itens.length) txt += `\n${d.dia.toUpperCase()}\n${itens.join("\n")}\n`;
   });
   compartilhar("Roteiro do feriadão", txt.trim());
 });
 
 /* ---------- ranking das sorveterias ---------- */
-const SORVETERIAS = [];
+const SORV_BASE = [];
 Object.keys(ANOS).forEach(ano => ANOS[ano].visitas.forEach(v => v.dias.forEach(d => d.lugares.forEach(l => {
-  if (l.sorvete && l.feito !== false) SORVETERIAS.push({ nome: l.nome.replace(/^Sorvete n[oa] /, ""), foto: l.fotos && l.fotos[0], quando: v.titulo });
+  if (l.sorvete && l.feito !== false) SORV_BASE.push({ nome: l.nome.replace(/^Sorvete n[oa] /, ""), foto: l.fotos && l.fotos[0], quando: v.titulo });
 }))));
+const ehSorvete = p => /sorvet|gelat|gelad/i.test((p.titulo || "") + " " + (p.descricao || ""));
+const limparNome = s => s.replace(/^(sorvete|sorveteria|gelato|gelateria)\s+(no|na|do|da|em|de)\s+/i, "").trim();
+const CHAVE_EXTRAS = "ju-sp-sorveterias-extra";
+let extras = [];
+try { extras = JSON.parse(localStorage.getItem(CHAVE_EXTRAS)) || []; } catch (e) {}
+function listaSorveterias() {
+  const lista = [...SORV_BASE];
+  const vistos = new Set(lista.map(s => s.nome.toLowerCase()));
+  const somar = s => { const k = s.nome.toLowerCase(); if (s.nome && !vistos.has(k)) { vistos.add(k); lista.push(s); } };
+  planos.filter(ehSorvete).forEach(p => somar({ nome: limparNome(p.titulo), foto: p.foto, quando: "Outubro de 2026" }));
+  extras.forEach(x => somar({ ...x, extra: true }));
+  return lista;
+}
+
 const CHAVE_NOTAS = "ju-sp-notas-sorvete";
-let notas = { ju: {}, gui: {} }, avaliador = "ju";
+let notas = { ju: {}, gui: {} }, avaliador = "ju", fotosSorv = [];
 try { notas = Object.assign(notas, JSON.parse(localStorage.getItem(CHAVE_NOTAS)) || {}); } catch (e) {}
 function gravarNotas(quem) {
   try { localStorage.setItem(CHAVE_NOTAS, JSON.stringify(notas)); } catch (e) {}
@@ -1065,40 +1312,64 @@ function ligarNotasCompartilhadas() {
   ["ju", "gui"].forEach(q => armazem.db.doc("notas/" + q).onSnapshot(s => {
     if (s.exists) { notas[q] = s.data() || {}; if ($("sorvetes").open) desenharSorvetes(); }
   }, () => {}));
+  armazem.db.collection("sorveterias").onSnapshot(s => {
+    extras = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    if ($("sorvetes").open) desenharSorvetes();
+  }, () => {});
 }
-const fotoMini = s => s.foto ? `<span class="polaroid"><img src="${SRC(s.foto)}" alt=""></span>` : `<span class="polaroid"><span class="sem-foto"><svg viewBox="0 0 24 32" width="26" height="34" aria-hidden="true"><path d="M5 14 L19 14 L12 30 Z" fill="#D9A35B" stroke="#15181D" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="7.5" fill="#E4567B" stroke="#15181D" stroke-width="1.6"/></svg></span></span>`;
-function top3(mapa) {
-  return SORVETERIAS.map(s => ({ ...s, nota: mapa(s.nome) })).filter(s => s.nota > 0)
+function fotoBotao(s) {
+  if (!s.foto) return `<span class="ft"><span class="sem-foto"><svg viewBox="0 0 24 32" width="22" height="30" aria-hidden="true"><path d="M5 14 L19 14 L12 30 Z" fill="#D9A35B" stroke="#15181D" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="7.5" fill="#E4567B" stroke="#15181D" stroke-width="1.6"/></svg></span></span>`;
+  const i = fotosSorv.length;
+  fotosSorv.push({ f: s.foto, nome: s.nome, consulta: s.nome + " sorveteria São Paulo" });
+  return `<button class="ft" type="button" data-sf="${i}" aria-label="Ampliar foto: ${esc(s.nome)}"><img src="${SRC(s.foto)}" alt=""></button>`;
+}
+function ranking(nota) {
+  return listaSorveterias().map(s => ({ ...s, nota: nota(s.nome) })).filter(s => s.nota > 0)
     .sort((a, b) => b.nota - a.nota || a.nome.localeCompare(b.nome)).slice(0, 3);
 }
-function podioHTML(lista, fmt) {
-  if (lista.length < 3) return `<p class="podio-vazio">Dê nota pra pelo menos 3 sorveterias pra montar o pódio.</p>`;
-  return [1, 0, 2].map(i => `<div class="degrau p${i + 1}">${fotoMini(lista[i]).replace('class="polaroid"', 'class="polaroid"')}
-    <strong>${lista[i].nome}</strong><span class="bloco">${i + 1}º</span><small>${fmt(lista[i].nota)}</small></div>`).join("");
+function podioHTML(lista, vazio, fmt) {
+  if (!lista.length) return `<p class="podio-msg">${vazio}</p>`;
+  return [1, 0, 2].map(i => {
+    const s = lista[i];
+    if (!s) return `<div class="degrau p${i + 1} vazio"><strong></strong><span class="bloco">${i + 1}º</span></div>`;
+    return `<div class="degrau p${i + 1}">${fotoBotao(s)}<strong>${esc(s.nome)}</strong><small>${fmt(s.nota)}</small><span class="bloco">${i + 1}º</span></div>`;
+  }).join("");
 }
-const nomeDe = q => q === "ju" ? "Jú" : "Gui";
+const media = s => (notas.ju[s] && notas.gui[s]) ? (notas.ju[s] + notas.gui[s]) / 2 : 0;
+const fmtMedia = n => "média " + String(n).replace(".", ",");
 function desenharSorvetes() {
+  fotosSorv = [];
+  const tj = ranking(n => notas.ju[n] || 0), tg = ranking(n => notas.gui[n] || 0), td = ranking(media);
+  $("podio-ju").innerHTML = podioHTML(tj, "A Jú ainda não votou.", n => `${n} de 5`);
+  $("podio-gui").innerHTML = podioHTML(tg, "O Gui ainda não votou.", n => `${n} de 5`);
+  $("podio-dois").innerHTML = podioHTML(td, "Aparece quando os dois tiverem votado nas mesmas sorveterias.", fmtMedia);
+  $("concordam").textContent = tj.length && tg.length
+    ? (tj[0].nome === tg[0].nome ? `Vocês concordam: ${tj[0].nome} é a campeã.` : `Briga boa: a Jú escolheu ${tj[0].nome} e o Gui escolheu ${tg[0].nome}.`) : "";
   const minhas = notas[avaliador] || {};
-  $("lista-sorv").innerHTML = SORVETERIAS.map(s => `<li class="sorv">${fotoMini(s)}<div><b>${s.nome}</b><small>${s.quando}</small>
-    <div class="bolas ${avaliador}" role="radiogroup" aria-label="Nota para ${s.nome}">${[1, 2, 3, 4, 5].map(n =>
-      `<button class="bola-nota ${n <= (minhas[s.nome] || 0) ? "cheia " + avaliador : ""}" data-sorv="${s.nome}" data-n="${n}" aria-label="${n} de 5" role="radio" aria-checked="${minhas[s.nome] === n}"></button>`).join("")}</div></div></li>`).join("");
+  $("lista-sorv").innerHTML = listaSorveterias().map(s => `<li class="sorv">${fotoBotao(s)}<div><b>${esc(s.nome)}</b><small>${esc(s.quando || "")}</small>
+    <div class="bolas ${avaliador}" role="radiogroup" aria-label="Nota para ${esc(s.nome)}">${[1, 2, 3, 4, 5].map(n =>
+      `<button class="bola-nota${n <= (minhas[s.nome] || 0) ? " cheia" : ""}" data-sorv="${esc(s.nome)}" data-n="${n}" aria-label="${n} de 5" role="radio" aria-checked="${minhas[s.nome] === n}"></button>`).join("")}</div></div>
+    ${s.extra ? `<button class="tirar" type="button" data-tirar="${esc(s.id)}">Apagar</button>` : "<span></span>"}</li>`).join("");
   document.querySelectorAll(".quem-avalia button").forEach(b => b.setAttribute("aria-selected", b.dataset.quem === avaliador ? "true" : "false"));
-  $("podio-titulo").textContent = `Top 3 ${avaliador === "ju" ? "da Jú" : "do Gui"}`;
-  $("podio").innerHTML = podioHTML(top3(n => minhas[n] || 0), n => `${n} de 5`);
-  const ambos = s => (notas.ju[s] && notas.gui[s]) ? (notas.ju[s] + notas.gui[s]) / 2 : 0;
-  const comb = top3(ambos);
-  $("podio-combinado").innerHTML = podioHTML(comb, n => `média ${String(n).replace(".", ",")}`);
-  const tj = top3(n => notas.ju[n] || 0), tg = top3(n => notas.gui[n] || 0);
-  let msg = "";
-  if (tj.length && tg.length) msg = tj[0].nome === tg[0].nome ? `Vocês concordam: ${tj[0].nome} é a campeã.` : `Briga boa: a Jú escolheu ${tj[0].nome} e o Gui escolheu ${tg[0].nome}.`;
-  else msg = "Quando os dois derem nota, aparece o resultado combinado.";
-  $("concordam").textContent = msg;
 }
 $("estacao-sorvete").addEventListener("click", () => { desenharSorvetes(); $("sorvetes").showModal(); $("sorvetes").querySelector(".sorveteria").scrollTop = 0; });
 $("estacao-sorvete").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("estacao-sorvete").dispatchEvent(new Event("click")); } });
 document.querySelector(".quem-avalia").addEventListener("click", e => {
   const b = e.target.closest("[data-quem]"); if (!b) return;
   avaliador = b.dataset.quem; desenharSorvetes();
+});
+$("sorvetes").addEventListener("click", e => {
+  const f = e.target.closest("[data-sf]");
+  if (f) {
+    const unicas = fotosSorv.filter((x, i, arr) => arr.findIndex(y => y.f === x.f) === i);
+    abrir(unicas.findIndex(x => x.f === fotosSorv[+f.dataset.sf].f), unicas);
+    return;
+  }
+  const tirar = e.target.closest("[data-tirar]");
+  if (tirar) {
+    if (!tirar.classList.contains("certeza")) { tirar.classList.add("certeza"); tirar.textContent = "Certeza?"; setTimeout(() => { tirar.classList.remove("certeza"); tirar.textContent = "Apagar"; }, 3000); return; }
+    apagarExtra(tirar.dataset.tirar); return;
+  }
 });
 $("lista-sorv").addEventListener("click", e => {
   const b = e.target.closest(".bola-nota"); if (!b) return;
@@ -1107,17 +1378,40 @@ $("lista-sorv").addEventListener("click", e => {
   notas[avaliador][nome] = notas[avaliador][nome] === n ? 0 : n;
   gravarNotas(avaliador);
   desenharSorvetes();
-  const nova = $("lista-sorv").querySelector(`[data-sorv="${CSS.escape(nome)}"][data-n="${n}"]`);
+  const nova = [...$("lista-sorv").querySelectorAll(".bola-nota")].find(x => x.dataset.sorv === nome && +x.dataset.n === n);
   if (nova) nova.classList.add("estalo");
 });
+function gravarExtras() { try { localStorage.setItem(CHAVE_EXTRAS, JSON.stringify(extras)); return true; } catch (e) { return false; } }
+async function apagarExtra(id) {
+  if (armazem.db) { try { await armazem.db.doc("sorveterias/" + id).delete(); } catch (e) {} return; }
+  extras = extras.filter(x => x.id !== id); gravarExtras(); desenharSorvetes();
+}
+$("add-sorv").addEventListener("click", () => { $("ficha-sorv").reset(); $("sorv-erro").textContent = ""; $("form-sorv").showModal(); });
+$("ficha-sorv").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, nome = f.nome.value.trim();
+  if (!nome) return;
+  const nova = { nome, quando: f.quando.value.trim(), criado: Date.now() };
+  $("sorv-salvar").disabled = true;
+  try {
+    if (f.foto.files && f.foto.files[0]) { $("sorv-erro").textContent = "Preparando a foto..."; nova.foto = await comprimirFoto(f.foto.files[0]); }
+    if (armazem.db) await armazem.db.collection("sorveterias").add(nova);
+    else {
+      extras.push({ id: "s" + Date.now(), ...nova });
+      if (!gravarExtras()) { extras.pop(); throw new Error("cheio"); }
+      desenharSorvetes();
+    }
+    $("form-sorv").close();
+  } catch (err) {
+    $("sorv-erro").textContent = err && err.message === "cheio" ? "Sem espaço neste aparelho. Tenta sem foto." : "Não deu pra salvar agora. Tenta de novo.";
+  }
+  $("sorv-salvar").disabled = false;
+});
 $("compartilhar-ranking").addEventListener("click", () => {
-  const linhas = (q) => {
-    const t = top3(n => notas[q][n] || 0);
-    return t.length ? t.map((s, i) => `${i + 1}º ${s.nome} (${s.nota}/5)`).join("\n") : "ainda sem notas";
-  };
-  const comb = top3(s => (notas.ju[s] && notas.gui[s]) ? (notas.ju[s] + notas.gui[s]) / 2 : 0);
-  let txt = `🍦 Ranking das sorveterias de SP\n\nTop 3 da Jú\n${linhas("ju")}\n\nTop 3 do Gui\n${linhas("gui")}`;
-  if (comb.length) txt += `\n\nTop 3 dos dois\n${comb.map((s, i) => `${i + 1}º ${s.nome} (média ${String(s.nota).replace(".", ",")})`).join("\n")}`;
+  const linhas = (lista, fmt) => lista.length ? lista.map((s, i) => `${i + 1}º ${s.nome} (${fmt(s.nota)})`).join("\n") : "ainda sem notas";
+  let txt = `🍦 Ranking das sorveterias de SP\n\nTop 3 da Jú\n${linhas(ranking(n => notas.ju[n] || 0), n => n + "/5")}\n\nTop 3 do Gui\n${linhas(ranking(n => notas.gui[n] || 0), n => n + "/5")}`;
+  const td = ranking(media);
+  if (td.length) txt += `\n\nTop 3 dos dois\n${linhas(td, fmtMedia)}`;
   compartilhar("Resultados das sorveterias", txt);
 });
 
@@ -1125,53 +1419,46 @@ $("compartilhar-ranking").addEventListener("click", () => {
 $("abrir-album").addEventListener("click", () => {
   $("album-titulo").textContent = `Álbum de ${anoAtual}` + (fotos.length ? ` · ${fotos.length} fotos` : "");
   $("grade").innerHTML = fotos.length
-    ? fotos.map((f, i) => `<button class="polaroid" style="--r:${giro(i)};animation-delay:${Math.min(i * 0.04, 1)}s" data-i="${i}"><img src="${SRC(f.f)}" alt="" loading="lazy"><span>${f.nome}</span></button>`).join("")
+    ? fotos.map((f, i) => `<button class="polaroid" style="--r:${giro(i)};animation-delay:${Math.min(i * 0.04, 1)}s" data-i="${i}"><img src="${SRC(f.f)}" alt="" loading="lazy"><span>${esc(f.nome)}</span></button>`).join("")
     : `<p class="vazio">As fotos dessa viagem ainda vão ser tiradas.</p>`;
   $("album").showModal();
   $("grade").scrollTop = 0;
 });
-$("grade").addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) abrir(+b.dataset.i); });
+$("grade").addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) abrir(+b.dataset.i, fotos); });
 
 /* ---------- sugestão de 2026 ---------- */
-let descansoAdicionado = false;
-function colocarDescanso(nova) {
-  const sabado = ANOS["2026"].visitas[0].dias.find(d => d.dia === "Sábado");
-  sabado.lugares.unshift({ nome: "Descanso", nota: "manhã, sem despertador", feito: false, mapa: false, nova });
-  descansoAdicionado = true;
-}
-try { if (localStorage.getItem("julia-sp-descanso") === "1") colocarDescanso(false); } catch (e) {}
-conteudo.addEventListener("click", e => {
-  if (e.target.id !== "sugerir") return;
+const temDescanso = () => planos.some(p => (p.titulo || "").trim().toLowerCase() === "descanso");
+$("sugerir").addEventListener("click", () => {
   const b = $("add-descanso");
-  b.disabled = descansoAdicionado;
-  b.textContent = descansoAdicionado ? "Já está na lista, no sábado" : "Adicionar descanso";
+  b.disabled = temDescanso();
+  b.textContent = temDescanso() ? "Já está na lista" : "Adicionar descanso";
   $("recado").showModal();
 });
-$("add-descanso").addEventListener("click", () => {
+$("add-descanso").addEventListener("click", async () => {
   $("recado").close();
-  if (descansoAdicionado) return;
-  colocarDescanso(true);
-  try { localStorage.setItem("julia-sp-descanso", "1"); } catch (e) {}
-  desenhar("2026", true);
+  if (temDescanso()) return;
+  try { await armazem.salvar({ titulo: "Descanso", autor: "gui", dia: "Sábado", horario: "manhã", descricao: "sem despertador", local: "", criado: 0 }); } catch (e) {}
 });
 document.querySelectorAll("[data-fechar]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
 
 /* ---------- foto ampliada ---------- */
 const dlg = $("ampliada"), quadro = $("quadro");
-function abrir(i) {
-  atual = (i + fotos.length) % fotos.length;
-  const f = fotos[atual];
+let galeria = [];
+function abrir(i, lista) {
+  if (lista) galeria = lista;
+  atual = (i + galeria.length) % galeria.length;
+  const f = galeria[atual];
   const trocar = () => {
     $("foto-grande").src = SRC(f.f); $("foto-grande").alt = f.nome;
     $("legenda").textContent = f.nome;
-    $("contador").textContent = `${atual + 1} de ${fotos.length}`;
+    $("contador").textContent = `${atual + 1} de ${galeria.length}`;
     $("mapa-grande").innerHTML = f.consulta ? `<a href="${mapaURL(f.consulta)}" target="_blank" rel="noopener">ver no mapa</a>` : "";
     quadro.classList.remove("trocando");
   };
   if (dlg.open) { quadro.classList.add("trocando"); setTimeout(trocar, 180); }
   else { trocar(); dlg.showModal(); }
 }
-conteudo.addEventListener("click", e => { const b = e.target.closest(".foto"); if (b) abrir(+b.dataset.i); });
+conteudo.addEventListener("click", e => { const b = e.target.closest(".foto"); if (b) abrir(+b.dataset.i, fotos); });
 $("anterior").onclick = () => abrir(atual - 1);
 $("proxima").onclick = () => abrir(atual + 1);
 $("fechar").onclick = () => dlg.close();
