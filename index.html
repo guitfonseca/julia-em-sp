@@ -285,6 +285,10 @@
   .parada.dela .nome { color: var(--lilas); }
   .selo-dela { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--lilas); color: #fff; font-size: .72rem; font-weight: 700; vertical-align: 2px; }
   .descricao { display: block; margin-top: 4px; font-size: .95rem; }
+  .lapis { color: #B9B2A0; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; transition: color .2s, background .2s; }
+  .parada.editavel:hover .lapis { color: var(--tinta); background: #0000000d; }
+  .ficha-botoes .apagar-item { margin-right: auto; background: none; border: 0; color: #B3261E; font-weight: 700; cursor: pointer; padding: 10px 4px; }
+  .ficha-botoes .apagar-item.certeza { background: #B3261E; color: #fff; border-radius: 999px; padding: 10px 16px; }
   .mexer { display: flex; flex-direction: column; gap: 6px; }
   .mexer button { background: none; border: 1.5px solid var(--trilho); border-radius: 999px; padding: 4px 12px; font-size: .82rem; font-weight: 600; cursor: pointer; }
   .mexer button:hover { border-color: var(--tinta); }
@@ -591,7 +595,7 @@
       <label>Nome da foto<input name="fotoNome" maxlength="80" placeholder="Ex.: nós dois no Matiz"></label>
       <p class="dica-form">Se for sorvete, escreva "sorvete" ou "sorveteria" no título que ele entra sozinho no ranking das sorveterias. A foto vai pro álbum de 2026.</p>
       <p class="erro" id="ficha-erro" aria-live="polite"></p>
-      <div class="ficha-botoes"><button class="botao claro" type="button" data-fechar>Cancelar</button><button class="botao lilas" type="submit" id="ficha-salvar">Salvar</button></div>
+      <div class="ficha-botoes"><button class="apagar-item" type="button" id="ficha-apagar" hidden>Apagar item</button><button class="botao claro" type="button" data-fechar>Cancelar</button><button class="botao lilas" type="submit" id="ficha-salvar">Salvar</button></div>
     </form>
     <span></span>
   </div>
@@ -1099,7 +1103,7 @@ function paradaPlano(p) {
   return `<li class="parada aberta editavel ${dela ? "dela" : "dele"} visivel" data-id="${esc(p.id)}">
     <div><span class="nome">${esc(p.titulo)}</span>${dela ? '<span class="selo-dela">Jú</span>' : ""}
     <span class="extra">${extra}</span>${p.descricao ? `<span class="descricao">${esc(p.descricao)}</span>` : ""}</div>
-    <div class="lado">${foto}<div class="mexer"><button type="button" data-editar="${esc(p.id)}">Editar</button><button type="button" data-apagar="${esc(p.id)}">Apagar</button></div></div></li>`;
+    <div class="lado">${foto}<span class="lapis" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 20h4L19 9l-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span></div></li>`;
 }
 function redesenhar2026() {
   if (anoAtual === "2026" && !$("viagem").hidden) desenhar("2026", true);
@@ -1236,6 +1240,8 @@ function abrirFicha(p) {
   f.reset();
   $("ficha-erro").textContent = "";
   $("ficha-titulo").textContent = p ? "Editar item" : "O que você quer fazer?";
+  const ap = $("ficha-apagar");
+  ap.hidden = !p; ap.classList.remove("certeza"); ap.textContent = "Apagar item"; ap.disabled = false;
   $("ficha-salvar").textContent = p ? "Salvar alterações" : "Adicionar à lista";
   f.autor.value = p ? (p.autor === "gui" ? "gui" : "ju") : "ju";
   removerFoto = false;
@@ -1264,21 +1270,23 @@ $("ficha").addEventListener("submit", async e => {
   catch (err) { $("ficha-erro").textContent = err && err.message === "cheio" ? "Sem espaço pra mais fotos neste aparelho. Tenta uma foto menor ou sem foto." : "Não deu pra salvar agora. Tenta de novo em instantes."; }
   $("ficha-salvar").disabled = false;
 });
-conteudo.addEventListener("click", async e => {
-  const ed = e.target.closest("[data-editar]");
-  if (ed) { abrirFicha(planos.find(p => p.id === ed.dataset.editar)); return; }
-  const ap = e.target.closest("[data-apagar]");
-  if (!ap) {
-    const linha = e.target.closest(".parada.editavel");
-    if (linha && !e.target.closest("a, button")) abrirFicha(planos.find(p => p.id === linha.dataset.id));
-    return;
-  }
+conteudo.addEventListener("click", e => {
+  const linha = e.target.closest(".parada.editavel");
+  if (linha && !e.target.closest("a, button")) abrirFicha(planos.find(p => p.id === linha.dataset.id));
+});
+let apagarTimer;
+$("ficha-apagar").addEventListener("click", async () => {
+  const ap = $("ficha-apagar");
+  if (!editando) return;
   if (!ap.classList.contains("certeza")) {
     ap.classList.add("certeza"); ap.textContent = "Apagar mesmo?";
-    setTimeout(() => { ap.classList.remove("certeza"); ap.textContent = "Apagar"; }, 3000);
+    clearTimeout(apagarTimer);
+    apagarTimer = setTimeout(() => { ap.classList.remove("certeza"); ap.textContent = "Apagar item"; }, 3000);
     return;
   }
-  try { await armazem.apagar(ap.dataset.apagar); } catch (err) { ap.textContent = "Erro, tenta de novo"; }
+  ap.disabled = true;
+  try { await armazem.apagar(editando.id); $("form-plano").close(); }
+  catch (err) { ap.disabled = false; ap.textContent = "Erro, tenta de novo"; }
 });
 
 /* ---------- compartilhar ---------- */
