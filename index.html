@@ -1,0 +1,1195 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jú em São Paulo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='34' fill='%23FFD200' stroke='%2315181D' stroke-width='14'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fundo: #E4E9EE;
+    --tinta: #15181D;
+    --cinza: #5A5F67;
+    --trilho: #C6C8C6;
+    --papel: #FCFBF8;
+    --amarela: #FFD200;
+    --cor: #15181D;
+    --fonte: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    box-sizing: border-box;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0; min-height: 100dvh;
+    background: var(--fundo); color: var(--tinta);
+    font-family: var(--fonte); font-size: 17px; line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .7s ease;
+  }
+  body[data-ano="2024"] { --fundo: #E3E9EF; }
+  body[data-ano="2025"] { --fundo: #F1E4E0; }
+  body[data-ano="2026"] { --fundo: #F4EDD6; }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; }
+  [hidden] { display: none !important; }
+
+  .som { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); right: 14px; z-index: 20; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--amarela); color: var(--tinta); display: grid; place-items: center; cursor: pointer; box-shadow: 0 6px 16px -8px #000; animation: aparecer .4s; }
+  .som .mudo { display: none; }
+  .som[aria-pressed="false"] .mudo { display: inline; }
+  .som[aria-pressed="false"] .ondas { display: none; }
+  .tela { min-height: 100dvh; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+  .saindo-tela { animation: sumir .6s forwards; }
+  @keyframes sumir { to { opacity: 0; } }
+  @keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+
+  /* polaroid, usada em todo lugar */
+  .polaroid {
+    background: var(--papel); padding: 6px 6px 20px;
+    box-shadow: 0 1px 2px rgba(21,24,29,.12), 0 10px 20px -10px rgba(21,24,29,.45);
+    transform: rotate(var(--r, 0deg));
+  }
+
+  /* ---------- 1. portão com senha ---------- */
+  #portao { display: grid; place-items: center; padding: 32px 24px; background: #E6E4DE; }
+  .portao-caixa { width: min(100%, 380px); text-align: center; animation: aparecer .6s; }
+  .portao-caixa .polaroid { --r: -3deg; width: 220px; margin: 0 auto 28px; padding: 8px 8px 34px; }
+  .portao-caixa .polaroid img { aspect-ratio: 4 / 5; object-fit: cover; width: 100%; }
+  .portao-caixa h1 { margin: 0; font-size: 2.2rem; font-weight: 800; font-stretch: 70%; line-height: 1; }
+  .portao-caixa label { display: block; margin: 10px 0 16px; color: var(--cinza); }
+  .catraca { display: flex; gap: 8px; }
+  .catraca input {
+    flex: 1; min-width: 0; padding: 13px 16px; border-radius: 999px;
+    border: 2px solid var(--tinta); background: var(--papel); font-size: 1rem;
+  }
+  .botao {
+    border: 0; border-radius: 999px; padding: 13px 22px; cursor: pointer;
+    background: var(--tinta); color: #fff; font-weight: 700;
+  }
+  .botao.amarelo { background: var(--amarela); color: var(--tinta); }
+  .botao:disabled { opacity: .55; cursor: default; }
+  .erro { min-height: 1.5em; margin: 12px 0 0; color: #B3261E; font-size: .95rem; }
+  .tremer { animation: tremer .45s; }
+  @keyframes tremer { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+  .liberado .polaroid { animation: voar .7s cubic-bezier(.5,0,.75,0) forwards; }
+  @keyframes voar { to { transform: rotate(12deg) translateY(-40px) scale(1.05); opacity: 0; } }
+
+  /* ---------- 2. plataforma ---------- */
+  #plataforma {
+    background: #1B1E23; color: #fff;
+    display: grid; grid-template-rows: 1fr auto auto; overflow: hidden;
+  }
+  .pergunta { align-self: end; padding: 48px 24px 28px; max-width: 1040px; width: 100%; margin: 0 auto; }
+  .placa {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #fff; color: var(--tinta); padding: 8px 14px 8px 8px; border-radius: 6px;
+    font-weight: 700; font-stretch: 85%; margin-bottom: 22px;
+    animation: aparecer .6s .2s both;
+  }
+  .placa .num { width: 30px; height: 30px; border-radius: 50%; background: var(--amarela); display: grid; place-items: center; font-weight: 800; }
+  .pergunta h2 {
+    margin: 0; font-size: clamp(2.8rem, 10vw, 7rem); font-weight: 800; font-stretch: 62%;
+    line-height: .88; letter-spacing: -.01em;
+  }
+  .pergunta h2 span, .abertura h1 span { display: block; overflow: hidden; padding-bottom: .12em; margin-bottom: -.12em; }
+  .pergunta h2 i { display: block; font-style: normal; animation: subir .9s cubic-bezier(.2,.8,.2,1) both; }
+  .pergunta h2 span:nth-child(2) i { animation-delay: .12s; }
+  @keyframes subir { from { transform: translateY(105%); } to { transform: none; } }
+
+  .cena { position: relative; height: 210px; overflow: hidden; background: linear-gradient(#111317, #23272D); }
+  .cena::after { /* borda da plataforma */
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px;
+    background: repeating-linear-gradient(90deg, var(--amarela) 0 14px, #E9C200 14px 16px);
+    box-shadow: 0 -2px 0 #0007;
+  }
+  .trem {
+    position: absolute; left: 6%; bottom: 30px; display: flex; gap: 6px;
+    transform: translateX(110vw);
+    transition: transform 2.6s cubic-bezier(.12,.7,.25,1);
+  }
+  .chegou .trem { transform: translateX(0); }
+  .partiu .trem { transform: translateX(-160vw); transition: transform 1.7s cubic-bezier(.6,0,.85,.4); }
+  .vagao {
+    position: relative; width: 520px; height: 150px; flex: none;
+    background: linear-gradient(#E9ECEF, #C9CED3); border-radius: 8px;
+    display: flex; align-items: center; justify-content: space-around; padding: 0 30px;
+  }
+  .vagao::after { /* faixa amarela */
+    content: ""; position: absolute; left: 0; right: 0; bottom: 26px; height: 12px; background: var(--amarela);
+  }
+  .vagao.frente { border-radius: 60px 8px 8px 8px; padding-left: 92px; }
+  .vagao.frente .vidro {
+    position: absolute; left: 14px; top: 22px; width: 60px; height: 62px;
+    background: #2D333B; border-radius: 40px 6px 6px 6px;
+  }
+  .letreiro {
+    position: absolute; left: 92px; top: 9px; padding: 1px 8px; border-radius: 3px;
+    background: #111; color: #FFB000; font: 700 .72rem/1.3 ui-monospace, Menlo, monospace;
+  }
+  .janela { width: 64px; height: 46px; background: #2D333B; border-radius: 6px; margin-top: -4px; }
+  .porta {
+    position: relative; width: 58px; height: 96px; margin-top: 14px; overflow: hidden;
+    background: #FFE9A6; border-radius: 4px 4px 0 0; z-index: 1;
+  }
+  .folha { position: absolute; top: 0; bottom: 0; width: 50%; background: #D4D8DD; border: 1px solid #A9AFB6; transition: transform .7s cubic-bezier(.5,0,.3,1); }
+  .folha::after { content: ""; position: absolute; left: 6px; right: 6px; top: 10px; height: 34px; background: #2D333B; border-radius: 3px; }
+  .folha.e { left: 0; } .folha.d { right: 0; }
+  .abertas .folha.e { transform: translateX(-100%); }
+  .abertas .folha.d { transform: translateX(100%); }
+  .embarque { padding: 26px 24px 40px; text-align: center; min-height: 112px; }
+  .embarque .botao { padding: 15px 34px; font-size: 1.05rem; opacity: 0; transform: translateY(8px); transition: opacity .5s, transform .5s; pointer-events: none; }
+  .abertas ~ .embarque .botao, .embarque.pronto .botao { opacity: 1; transform: none; pointer-events: auto; }
+  .embarque small { display: block; margin-top: 12px; color: #9DA2AA; }
+
+  /* ---------- 3. mapa do metrô ---------- */
+  #mapa { display: grid; grid-template-rows: auto 1fr auto; background: #F3F2EE; }
+  .mapa-topo { max-width: 1040px; width: 100%; margin: 0 auto; padding: 36px 24px 0; }
+  .mapa-topo small { color: var(--cinza); font-size: .95rem; }
+  .mapa-topo h2 { margin: 2px 0 0; font-size: clamp(2.4rem, 8vw, 4.6rem); font-weight: 800; font-stretch: 62%; line-height: .9; }
+  .mapa-area { display: grid; place-items: center; padding: 8px 12px; min-height: 0; }
+  #rede { width: 100%; max-width: 560px; max-height: 68dvh; overflow: visible; transition: transform .8s cubic-bezier(.6,0,.3,1), opacity .7s; }
+  #rede.mergulho { opacity: 0; }
+  #rede .via { fill: none; stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+  #rede .via.decor { stroke-width: 7; opacity: .35; }
+  #rede .ponto { fill: #fff; stroke-width: 3.5; }
+  #rede .hub circle { fill: #fff; stroke: var(--tinta); stroke-width: 5; }
+  #rede .hub text { font: 600 13px var(--fonte); fill: var(--cinza); }
+  .desenhar .via { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: tracar-via 1.3s cubic-bezier(.6,0,.3,1) forwards; }
+  .desenhar .ponto, .desenhar .hub { opacity: 0; animation: aparecer .3s forwards; }
+  @keyframes tracar-via { to { stroke-dashoffset: 0; } }
+  .estacao-ano { cursor: pointer; outline: none; }
+  .estacao-ano .anel { fill: #fff; stroke: var(--tinta); stroke-width: 7; transition: transform .3s cubic-bezier(.3,1.6,.5,1); transform-box: fill-box; transform-origin: center; }
+  .estacao-ano .pulso { fill: none; stroke: var(--tinta); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: pulsar 2.4s 2.2s infinite; opacity: 0; }
+  @keyframes pulsar { 0% { transform: scale(1); opacity: .5; } 80%, 100% { transform: scale(2.2); opacity: 0; } }
+  .estacao-ano text { font-family: var(--fonte); fill: var(--tinta); }
+  .estacao-ano .rotulo { font-size: 34px; font-weight: 800; font-stretch: 70%; }
+  .estacao-ano .sub { font-size: 13px; fill: var(--cinza); }
+  .estacao-ano:hover .anel, .estacao-ano:focus-visible .anel { transform: scale(1.25); }
+  .estacao-ano:focus-visible .anel { stroke: #0455A1; }
+  .desenhar .estacao-ano { opacity: 0; animation: aparecer .5s forwards; }
+  .legenda-mapa { max-width: 1040px; width: 100%; margin: 0 auto; padding: 8px 24px 32px; display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-size: .9rem; color: var(--cinza); }
+  .legenda-mapa span { display: inline-flex; align-items: center; gap: 7px; }
+  .legenda-mapa i { width: 22px; height: 6px; border-radius: 3px; background: var(--c); }
+  .legenda-mapa i.tracejado { background: repeating-linear-gradient(90deg, var(--c) 0 6px, transparent 6px 10px); }
+  #rede .obra { fill: none; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 9; opacity: .75; }
+  .desenhar .obra { opacity: 0; animation: obra-surge .8s 1.6s forwards; }
+  @keyframes obra-surge { to { opacity: .75; } }
+  .estacao-obra { cursor: pointer; outline: none; }
+  .estacao-obra .anel-obra { fill: #fff; stroke: #8E44AD; stroke-width: 6; stroke-dasharray: 6 5; }
+  .estacao-obra text { font-family: var(--fonte); fill: var(--cinza); }
+  .estacao-obra .rotulo { font-size: 34px; font-weight: 800; font-stretch: 70%; }
+  .estacao-obra .sub { font-size: 13px; }
+  .estacao-obra:hover .anel-obra, .estacao-obra:focus-visible .anel-obra { stroke-dashoffset: 6; stroke-width: 7; }
+  .desenhar .estacao-obra { opacity: 0; animation: aparecer .5s 2s forwards; }
+  .balao-obra { transform-box: fill-box; transform-origin: left center; }
+  .balao-obra text { font-family: var(--fonte); font-size: 12.5px; fill: #D4D6DA; }
+  .balao-obra text.b1 { font-weight: 700; fill: #fff; }
+  .balao-obra { opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .balao-obra.visivel { opacity: 1; animation: balao .5s cubic-bezier(.2,1.3,.4,1); }
+  @keyframes balao { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: none; } }
+
+  /* ---------- 4. um ano ---------- */
+  .topo-ano { max-width: 1040px; margin: 0 auto; padding: 22px 24px 0; }
+  .voltar { display: inline-flex; align-items: center; gap: 10px; background: none; border: 0; padding: 6px 0; cursor: pointer; font-weight: 700; }
+  .voltar .mini-mapa { width: 30px; height: 30px; border-radius: 50%; border: 5px solid var(--tinta); background: #fff; }
+  .topo-ano h1 { margin: 26px 0 0; font-size: clamp(4rem, 18vw, 10rem); font-weight: 800; font-stretch: 62%; line-height: .85; }
+  .topo-ano p { margin: 8px 0 0; color: var(--cinza); font-size: 1.1rem; }
+  #viagem.ativa .topo-ano h1 { animation: subir-ano .8s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes subir-ano { from { transform: translateY(30px); opacity: 0; } }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 24px 120px; transition: opacity .25s; }
+  main.trocando { opacity: 0; }
+  .visita { margin-top: 56px; }
+  .visita-topo { display: grid; grid-template-columns: auto 1fr; gap: 0 18px; align-items: center; }
+  .selo { grid-row: span 2; width: 56px; height: 56px; border-radius: 50%; background: var(--cor); color: var(--sobre, #fff); display: grid; place-items: center; font-weight: 800; font-stretch: 70%; font-size: 1.5rem; }
+  .visita-topo h2 { margin: 0; font-size: clamp(1.9rem, 5vw, 3rem); font-weight: 800; font-stretch: 70%; line-height: 1; }
+  .visita-topo p { margin: 4px 0 0; color: var(--cinza); }
+
+  .linha { list-style: none; margin: 28px 0 0; padding: 0; position: relative; max-width: 720px; }
+  .linha::before, .linha .preenchido { content: ""; position: absolute; left: 15px; top: 0; width: 6px; border-radius: 3px; }
+  .linha::before { bottom: 0; background: var(--trilho); }
+  .linha .preenchido { height: 0; background: var(--cor); }
+  .dia, .parada { position: relative; padding-left: 52px; }
+  .dia { padding-top: 30px; padding-bottom: 4px; font-weight: 800; font-stretch: 75%; font-size: 1.35rem; }
+  .dia::before { content: ""; position: absolute; left: 4px; top: 30px; width: 28px; height: 28px; border-radius: 50%; background: var(--papel); border: 6px solid var(--trilho); transition: border-color .3s; }
+  .dia.passou::before { border-color: var(--cor); }
+  .dia:first-of-type { padding-top: 0; }
+  .dia:first-of-type::before { top: 0; }
+
+  .parada {
+    display: grid; grid-template-columns: 1fr auto; gap: 18px; align-items: center;
+    min-height: 72px; padding-top: 12px; padding-bottom: 12px;
+    opacity: 0; transform: translateX(-10px); transition: opacity .5s, transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .parada.visivel { opacity: 1; transform: none; }
+  .parada::before { content: ""; position: absolute; left: 11px; top: 50%; margin-top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--papel); border: 3px solid var(--trilho); transition: background .3s, border-color .3s, transform .3s cubic-bezier(.3,1.6,.5,1); }
+  .parada.passou::before { background: var(--cor); border-color: var(--cor); transform: scale(1.15); }
+  .parada.aberta.passou::before { background: var(--papel); }
+  .parada.nova { animation: chegar .8s cubic-bezier(.2,.8,.2,1); }
+  @keyframes chegar { from { opacity: 0; transform: translateY(-14px); } }
+  .nome { font-weight: 600; font-size: 1.08rem; line-height: 1.2; }
+  .extra { display: block; margin-top: 3px; font-size: .9rem; color: var(--cinza); }
+  .extra a { text-underline-offset: 3px; text-decoration-color: var(--trilho); }
+  .marca { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1.5px solid currentColor; border-radius: 999px; font-size: .72rem; font-weight: 700; vertical-align: 2px; color: var(--cinza); }
+
+  /* polaroid pequena ao lado da estação */
+  .foto { border: 0; cursor: zoom-in; position: relative; margin-right: 6px; transition: transform .3s cubic-bezier(.3,1.4,.5,1); }
+  .foto img { width: 92px; height: 92px; object-fit: cover; }
+  .foto:hover { transform: rotate(0deg) scale(1.06); }
+  .foto.varias::before { content: ""; position: absolute; inset: 0; background: var(--papel); transform: rotate(-8deg) translate(-6px, 2px); box-shadow: 0 8px 14px -8px rgba(21,24,29,.45); z-index: -1; }
+  .foto .mais { position: absolute; right: -8px; bottom: -8px; background: var(--tinta); color: #fff; font-size: .72rem; font-weight: 800; border-radius: 999px; padding: 2px 7px; }
+
+  .sugestao { margin: 40px 0 0 52px; }
+  :root { --lilas: #8E44AD; }
+  .botao.lilas { background: var(--lilas); color: #fff; }
+  .botao.claro { background: transparent; color: var(--tinta); border: 2px solid var(--tinta); }
+  .acoes-ano { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .acoes-ano .botao { padding: 11px 18px; font-size: .95rem; }
+  .quem { display: flex; gap: 16px; margin-top: 8px; font-size: .9rem; color: var(--cinza); }
+  .quem span { display: inline-flex; align-items: center; gap: 6px; }
+  .quem i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+  .parada.dela::before { border-color: var(--lilas) !important; background: var(--lilas) !important; }
+  .parada.dela .nome { color: var(--lilas); }
+  .selo-dela { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--lilas); color: #fff; font-size: .72rem; font-weight: 700; vertical-align: 2px; }
+  .descricao { display: block; margin-top: 4px; font-size: .95rem; }
+  .mexer { display: flex; flex-direction: column; gap: 6px; }
+  .mexer button { background: none; border: 1.5px solid var(--trilho); border-radius: 999px; padding: 4px 12px; font-size: .82rem; font-weight: 600; cursor: pointer; }
+  .mexer button:hover { border-color: var(--tinta); }
+  .mexer button.certeza { background: #B3261E; border-color: #B3261E; color: #fff; }
+  .dia.dela-dia { color: var(--lilas); }
+  .dia.dela-dia::before { border-color: var(--lilas) !important; }
+
+  .ficha { width: min(100%, 440px); background: var(--papel); color: var(--tinta); padding: 24px 22px 20px; border-radius: 4px; box-shadow: 0 20px 40px -20px #000; transform: rotate(-.6deg); animation: cair .5s cubic-bezier(.2,1.3,.4,1); }
+  .ficha h3 { margin: 0 0 16px; font-size: 1.8rem; font-weight: 800; font-stretch: 70%; line-height: 1; }
+  .ficha label { display: block; margin-bottom: 12px; font-size: .85rem; font-weight: 700; color: var(--cinza); }
+  .ficha input, .ficha select, .ficha textarea { display: block; width: 100%; margin-top: 5px; padding: 11px 12px; border: 1.5px solid var(--trilho); border-radius: 8px; background: #fff; font-size: 1rem; font-weight: 400; color: var(--tinta); resize: vertical; }
+  .ficha input:focus, .ficha select:focus, .ficha textarea:focus { outline: none; border-color: var(--lilas); }
+  .ficha .erro { margin: 0 0 8px; min-height: 1.2em; }
+  .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ficha-botoes { display: flex; justify-content: flex-end; gap: 10px; }
+
+  .botao.verde { background: #1F9D55; color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
+  .botao.rosa { background: #E4567B; color: #fff; }
+  .bilhete { width: min(100%, 480px); }
+  .bilhete textarea { width: 100%; font: 400 .92rem/1.5 var(--fonte); padding: 12px; border: 1.5px solid var(--trilho); border-radius: 8px; background: #fff; color: var(--tinta); resize: vertical; }
+  .ficha .erro.ok { color: #1F7A45; }
+  .ficha-botoes { flex-wrap: wrap; }
+
+  #sorvetes .sorveteria { min-height: 100%; background: #FBEAEF; color: var(--tinta); overflow-y: auto; height: 100%; padding: calc(18px + env(safe-area-inset-top, 0px)) 20px calc(40px + env(safe-area-inset-bottom, 0px)); animation: aparecer .3s; }
+  .sorveteria > * { max-width: 720px; margin-left: auto; margin-right: auto; }
+  .sorv-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .sorv-topo small { color: #B03A5B; font-weight: 700; }
+  .sorv-topo h2 { margin: 2px 0 0; font-size: clamp(2.2rem, 8vw, 3.6rem); font-weight: 800; font-stretch: 62%; line-height: .9; }
+  .redondo.escuro { border-color: var(--tinta); color: var(--tinta); }
+  .redondo.escuro:hover { background: #F3D3DC; }
+  .quem-avalia { display: flex; gap: 6px; margin-top: 22px; background: #F3D3DC; padding: 5px; border-radius: 999px; width: fit-content; margin-left: auto; margin-right: auto; }
+  .quem-avalia button { border: 0; background: transparent; padding: 9px 18px; border-radius: 999px; font-weight: 700; cursor: pointer; }
+  .quem-avalia button[aria-selected="true"] { background: var(--tinta); color: #fff; }
+  .quem-avalia button[data-quem="ju"][aria-selected="true"] { background: var(--lilas); }
+  .dica-sorv { text-align: center; color: #8A5566; font-size: .92rem; margin-top: 10px; }
+  .lista-sorv { list-style: none; padding: 0; margin-top: 18px; display: grid; gap: 14px; }
+  .sorv { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; background: #fff; border-radius: 12px; padding: 12px; box-shadow: 0 6px 16px -12px #B03A5B; }
+  .sorv .polaroid { --r: -3deg; padding: 4px 4px 12px; }
+  .sorv .polaroid img, .sorv .sem-foto { width: 64px; height: 64px; object-fit: cover; }
+  .sorv .sem-foto { display: grid; place-items: center; background: #F3D3DC; font-size: 1.8rem; }
+  .sorv b { display: block; font-size: 1.1rem; }
+  .sorv small { color: var(--cinza); }
+  .bolas { display: flex; gap: 6px; margin-top: 8px; }
+  .bola-nota { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid #E4567B; background: #fff; cursor: pointer; padding: 0; transition: transform .2s cubic-bezier(.3,1.6,.5,1), background .2s; }
+  .bola-nota.cheia { background: #E4567B; }
+  .bola-nota.cheia.ju { background: var(--lilas); border-color: var(--lilas); }
+  .bolas.ju .bola-nota { border-color: var(--lilas); }
+  .bola-nota:hover { transform: scale(1.12); }
+  .bola-nota.estalo { animation: estalo .35s; }
+  @keyframes estalo { 50% { transform: scale(1.35); } }
+  .podio-area { margin-top: 38px; text-align: center; }
+  .podio-area h3 { font-size: 1.7rem; font-weight: 800; font-stretch: 70%; margin: 0 0 18px; }
+  .podio { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 10px; max-width: 460px; margin: 0 auto; }
+  .degrau { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .degrau .polaroid { --r: 0deg; padding: 4px 4px 10px; width: 78px; }
+  .degrau .polaroid img, .degrau .sem-foto { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .degrau .sem-foto { display: grid; place-items: center; background: #F3D3DC; font-size: 1.8rem; }
+  .degrau strong { font-size: .95rem; line-height: 1.15; min-height: 2.3em; }
+  .bloco { width: 100%; border-radius: 8px 8px 0 0; background: var(--tinta); color: #fff; font-weight: 800; font-stretch: 70%; font-size: 1.8rem; display: grid; place-items: center; transform-origin: bottom; animation: crescer .7s cubic-bezier(.2,1.2,.4,1) both; }
+  .degrau.p1 .bloco { height: 120px; background: #E4567B; animation-delay: .25s; }
+  .degrau.p2 .bloco { height: 86px; animation-delay: .1s; }
+  .degrau.p3 .bloco { height: 62px; background: #8A5566; animation-delay: .4s; }
+  @keyframes crescer { from { transform: scaleY(0); } }
+  .podio-vazio { grid-column: 1 / -1; color: #8A5566; }
+  .concordam { color: #8A5566; margin-top: 14px; }
+  .sorv-acoes { text-align: center; margin-top: 34px; }
+
+  .palco.palco-album { place-items: stretch; grid-template-rows: auto minmax(0, 1fr); background: rgba(14,16,19,.97); }
+  .grade { overflow-y: auto; padding: 18px 6px 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 26px 20px; align-content: start; max-width: 1040px; width: 100%; margin: 0 auto; }
+  .grade .polaroid { border: 0; padding: 7px 7px 10px; cursor: zoom-in; text-align: left; color: var(--tinta); animation: cair .5s cubic-bezier(.2,1.2,.4,1) both; }
+  .grade .polaroid img { width: 100%; aspect-ratio: 1; object-fit: cover; }
+  .grade .polaroid span { display: block; padding-top: 8px; font-size: .85rem; font-weight: 600; line-height: 1.2; }
+  .grade .vazio { grid-column: 1 / -1; text-align: center; color: #B9BCC2; padding-top: 20vh; font-size: 1.1rem; }
+  .rodape { margin-top: 72px; color: var(--cinza); font-size: .95rem; }
+
+  /* ---------- janelas (foto ampliada e sugestão) ---------- */
+  dialog { border: 0; padding: 0; margin: 0; max-width: none; max-height: none; width: 100vw; height: 100dvh; background: transparent; }
+  dialog::backdrop { background: transparent; }
+  .palco {
+    height: 100%; background: rgba(14,16,19,.94); color: #fff;
+    display: grid; grid-template-rows: auto 1fr auto; place-items: center;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    animation: aparecer .25s;
+  }
+  .palco header { justify-self: stretch; display: flex; justify-content: space-between; align-items: center; color: #B9BCC2; font-size: .95rem; }
+  .palco .polaroid { --r: -1.5deg; padding: 10px 10px 16px; color: var(--tinta); max-width: min(100%, 560px); transition: opacity .2s, transform .35s cubic-bezier(.2,.8,.2,1); }
+  .palco .polaroid.trocando { opacity: 0; transform: rotate(2deg) scale(.96); }
+  .palco .polaroid img { max-height: calc(100dvh - 260px); width: auto; margin: 0 auto; }
+  .palco figcaption { padding: 12px 4px 0; display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .palco figcaption strong { font-size: 1.2rem; font-stretch: 85%; }
+  .palco figcaption a { font-size: .9rem; color: var(--cinza); white-space: nowrap; }
+  .palco footer { display: flex; gap: 16px; margin-top: 14px; }
+  .redondo { width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #4A4E55; background: transparent; color: #fff; cursor: pointer; font-size: 1.4rem; line-height: 1; }
+  .redondo:hover { background: #2A2E34; }
+  .redondo.p { width: 40px; height: 40px; font-size: 1.05rem; }
+
+  .recado { text-align: center; }
+  .recado .polaroid { --r: 2deg; width: min(78vw, 300px); margin: 0 auto; padding: 10px 10px 18px; animation: cair .7s cubic-bezier(.2,1.3,.4,1); }
+  .recado .polaroid img { aspect-ratio: 4 / 5; object-fit: cover; width: 100%; }
+  @keyframes cair { from { transform: translateY(-40px) rotate(-8deg); opacity: 0; } }
+  .recado .importante { display: block; margin-top: 26px; color: #B9BCC2; font-size: 1rem; font-weight: 600; }
+  .recado p { font-size: clamp(2rem, 8vw, 3rem); font-weight: 800; font-stretch: 70%; line-height: 1.05; margin: 26px auto 22px; max-width: 16ch; }
+
+  @media (max-width: 640px) {
+    .abertura { padding-top: 48px; }
+    .foto img { width: 74px; height: 74px; }
+    .parada, .dia { padding-left: 46px; }
+    .sugestao { margin-left: 46px; }
+    .cena { height: 190px; }
+    .vagao { transform-origin: bottom left; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
+    .parada { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body data-ano="2024">
+
+<audio id="trilha" src="musica/linha4.mp3" preload="auto" loop></audio>
+<button class="som" id="som" type="button" aria-label="Desligar a música" aria-pressed="true" hidden>
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="ondas" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mudo" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+</button>
+
+<!-- 1. senha -->
+<section class="tela" id="portao">
+  <form class="portao-caixa" id="form-senha" autocomplete="off">
+    <div class="polaroid"><img src="fotos/27-aleatoria.jpg" alt="Nós dois, numa foto engraçada"></div>
+    <h1>Antes de embarcar</h1>
+    <label for="senha">Qual a cor da sua linha de metrô preferida?</label>
+    <div class="catraca">
+      <input id="senha" type="text" inputmode="text" autocapitalize="none" spellcheck="false" placeholder="Sua resposta">
+      <button class="botao" type="submit">Entrar</button>
+    </div>
+    <p class="erro" id="erro" aria-live="polite"></p>
+  </form>
+</section>
+
+<!-- 2. plataforma -->
+<section class="tela" id="plataforma" hidden>
+  <div class="pergunta">
+    <div class="placa"><span class="num">4</span>Estação Butantã-Uai</div>
+    <h2><span><i>Pronta para a</i></span><span><i>viagem de 2026?</i></span></h2>
+  </div>
+  <div class="cena" id="cena">
+    <div class="trem" id="trem">
+      <div class="vagao frente">
+        <span class="vidro"></span><span class="letreiro">LINHA JÚ · 2024 › 2026</span>
+        <span class="porta"><span class="folha e"></span><span class="folha d"></span></span>
+        <span class="janela"></span>
+        <span class="porta"><span class="folha e"></span><span class="folha d"></span></span>
+        <span class="janela"></span>
+        <span class="porta"><span class="folha e"></span><span class="folha d"></span></span>
+      </div>
+      <div class="vagao">
+        <span class="porta"><span class="folha e"></span><span class="folha d"></span></span>
+        <span class="janela"></span>
+        <span class="porta"><span class="folha e"></span><span class="folha d"></span></span>
+        <span class="janela"></span>
+        <span class="porta"><span class="folha e"></span><span class="folha d"></span></span>
+      </div>
+    </div>
+  </div>
+  <div class="embarque" id="embarque">
+    <button class="botao amarelo" id="embarcar" type="button">Embarcar</button>
+    <small>Próximas estações: 2024, 2025 e 2026</small>
+  </div>
+</section>
+
+<!-- 3. mapa -->
+<section class="tela" id="mapa" hidden>
+  <div class="mapa-topo"><small>Jú em São Paulo</small><h2>Escolha a estação</h2></div>
+  <div class="mapa-area">
+    <svg id="rede" viewBox="0 6 400 500" role="group" aria-label="Mapa com as estações 2024, 2025, 2026 e 2027">
+      <defs><pattern id="zebra" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="14" fill="#FFD200"/><rect x="7" width="7" height="14" fill="#15181D"/></pattern></defs>
+      <path class="via" style="--len:150" stroke="#E4567B" d="M200 260 H342"/>
+      <path class="obra" stroke="#8E44AD" d="M200 260 H175 L90 345 V403"/>
+      <path class="via" style="--len:330" stroke="#0455A1" d="M200 260 L70 130 V92"/>
+      <path class="via" style="--len:330" stroke="#00855F" d="M200 260 V165 L135 100 H82" />
+      <path class="via" style="--len:300" stroke="#E2231A" d="M200 260 L330 130 V122"/>
+      <path class="via" style="--len:300" stroke="#F2B705" d="M200 260 L300 360 V420 H318"/>
+      <g class="pontos">
+        <circle class="ponto" stroke="#0455A1" cx="152" cy="212" r="5"/><circle class="ponto" stroke="#0455A1" cx="105" cy="165" r="5"/>
+        <circle class="ponto" stroke="#00855F" cx="200" cy="200" r="5"/><circle class="ponto" stroke="#00855F" cx="168" cy="132" r="5"/><circle class="ponto" stroke="#00855F" cx="110" cy="100" r="5"/>
+        <circle class="ponto" stroke="#F2B705" cx="240" cy="300" r="5"/><circle class="ponto" stroke="#F2B705" cx="280" cy="340" r="5"/><circle class="ponto" stroke="#F2B705" cx="300" cy="395" r="5"/>
+        <circle class="ponto" stroke="#E2231A" cx="250" cy="210" r="5"/><circle class="ponto" stroke="#E2231A" cx="295" cy="165" r="5"/>
+        <circle class="ponto" stroke="#E4567B" cx="270" cy="260" r="5"/>
+      </g>
+      <g class="hub"><circle cx="200" cy="260" r="11"/><text x="174" y="252" text-anchor="end">Butantã-Uai</text></g>
+
+      <g class="estacao-ano" data-ano="2024" data-x="70" data-y="100" tabindex="0" role="button" aria-label="Ir para 2024">
+        <circle class="pulso" cx="70" cy="100" r="17"/><circle class="anel" cx="70" cy="100" r="17"/>
+        <text class="rotulo" x="70" y="62" text-anchor="middle">2024</text><text class="sub" x="70" y="28" text-anchor="middle">duas visitas</text>
+      </g>
+      <g class="estacao-ano" data-ano="2025" data-x="330" data-y="112" tabindex="0" role="button" aria-label="Ir para 2025">
+        <circle class="pulso" cx="330" cy="112" r="17"/><circle class="anel" cx="330" cy="112" r="17"/>
+        <text class="rotulo" x="330" y="74" text-anchor="middle">2025</text><text class="sub" x="330" y="40" text-anchor="middle">Natal</text>
+      </g>
+      <g class="estacao-ano" data-ano="2026" data-x="330" data-y="420" tabindex="0" role="button" aria-label="Ir para 2026">
+        <circle class="pulso" cx="330" cy="420" r="17"/><circle class="anel" cx="330" cy="420" r="17"/>
+        <text class="rotulo" x="330" y="474" text-anchor="middle">2026</text><text class="sub" x="330" y="493" text-anchor="middle">a próxima</text>
+      </g>
+      <g class="estacao-ano estacao-sorvete" id="estacao-sorvete" tabindex="0" role="button" aria-label="Ranking das sorveterias">
+        <circle class="pulso" cx="360" cy="260" r="17" style="stroke:#E4567B"/><circle class="anel" cx="360" cy="260" r="17" style="stroke:#E4567B"/>
+        <g class="icone-sorvete" aria-hidden="true">
+          <path d="M353.5 259 L366.5 259 L360 273 Z" fill="#D9A35B" stroke="#15181D" stroke-width="1.6" stroke-linejoin="round"/>
+          <path d="M356 263 l6 0 M357.5 267 l3 0" stroke="#15181D" stroke-width="1.1" stroke-linecap="round" opacity=".55"/>
+          <circle cx="360" cy="254.5" r="6.8" fill="#E4567B" stroke="#15181D" stroke-width="1.6"/>
+          <circle cx="357.6" cy="252.4" r="1.6" fill="#fff" opacity=".8"/>
+        </g>
+        <text class="sub" x="360" y="296" text-anchor="middle">Sorveterias</text>
+      </g>
+      <g class="balao-obra" id="balao-obra">
+        <rect x="128" y="384" width="158" height="86" rx="6" fill="#15181D"/>
+        <rect x="128" y="384" width="158" height="9" fill="url(#zebra)"/>
+        <text x="138" y="410" class="b1">Em construção:</text>
+        <text x="138" y="426">aguardando incentivos</text>
+        <text x="138" y="441">financeiros para</text>
+        <text x="138" y="456">conclusão da obra.</text>
+        <path d="M128 414 l-10 6 l10 6 z" fill="#15181D"/>
+      </g>
+      <g class="estacao-obra" id="estacao-2027" tabindex="0" role="button" aria-label="2027, em construção: aguardando incentivos financeiros para conclusão da obra">
+        <circle class="anel-obra" cx="90" cy="420" r="17"/>
+        <text class="rotulo" x="90" y="474" text-anchor="middle">2027</text><text class="sub" x="90" y="493" text-anchor="middle">em obras</text>
+      </g>
+    </svg>
+  </div>
+  <div class="legenda-mapa">
+    <span style="--c:#0455A1"><i></i>Junho de 2024</span>
+    <span style="--c:#00855F"><i></i>Outubro de 2024</span>
+    <span style="--c:#E2231A"><i></i>Dezembro de 2025</span>
+    <span style="--c:#F2B705"><i></i>Outubro de 2026</span>
+    <span style="--c:#E4567B"><i></i>Ranking de sorveterias</span>
+    <span style="--c:#8E44AD"><i class="tracejado"></i>2027, em obras</span>
+  </div>
+</section>
+
+<!-- 4. um ano -->
+<section class="tela" id="viagem" hidden>
+  <header class="topo-ano">
+    <button class="voltar" id="voltar" type="button"><span class="mini-mapa"></span>Voltar ao mapa</button>
+    <h1 id="titulo-ano">2024</h1>
+    <p id="resumo-ano"></p>
+    <div class="acoes-ano">
+      <button class="botao" id="abrir-album" type="button">Álbum de fotos</button>
+      <button class="botao lilas" id="participar" type="button" hidden>Participar da lista</button>
+      <button class="botao claro" id="compartilhar-roteiro" type="button" hidden>Compartilhar roteiro</button>
+    </div>
+  </header>
+  <main id="conteudo"></main>
+</section>
+
+<dialog id="ampliada" aria-label="Foto ampliada">
+  <div class="palco">
+    <header><span id="contador"></span><button class="redondo p" id="fechar" aria-label="Fechar">✕</button></header>
+    <figure class="polaroid" id="quadro"><img id="foto-grande" alt=""><figcaption><strong id="legenda"></strong><span id="mapa-grande"></span></figcaption></figure>
+    <footer><button class="redondo" id="anterior" aria-label="Foto anterior">‹</button><button class="redondo" id="proxima" aria-label="Próxima foto">›</button></footer>
+  </div>
+</dialog>
+
+<dialog id="album" aria-label="Álbum de fotos">
+  <div class="palco palco-album">
+    <header><span id="album-titulo"></span><button class="redondo p" data-fechar aria-label="Fechar">✕</button></header>
+    <div class="grade" id="grade"></div>
+  </div>
+</dialog>
+
+<dialog id="form-plano" aria-label="Sugestão da Jú">
+  <div class="palco">
+    <span></span>
+    <form class="ficha" id="ficha" autocomplete="off">
+      <h3 id="ficha-titulo">O que você quer fazer?</h3>
+      <label>Título<input name="titulo" required maxlength="80" placeholder="Ex.: Feirinha da Benedito Calixto"></label>
+      <div class="dupla">
+      <label>Dia<select name="dia"><option value="Sexta">Sexta</option><option value="Sábado">Sábado</option><option value="Domingo">Domingo</option><option value="Segunda">Segunda</option></select></label>
+      <label>Horário<select name="horario"><option value="manhã">Manhã</option><option value="tarde">Tarde</option><option value="noite">Noite</option></select></label>
+      </div>
+      <label>Descrição<textarea name="descricao" rows="3" maxlength="300" placeholder="Por que vale a pena, o que comer, quem chamar..."></textarea></label>
+      <label>Localização<input name="local" maxlength="120" placeholder="Endereço ou nome do lugar"></label>
+      <p class="erro" id="ficha-erro" aria-live="polite"></p>
+      <div class="ficha-botoes"><button class="botao claro" type="button" data-fechar>Cancelar</button><button class="botao lilas" type="submit" id="ficha-salvar">Salvar</button></div>
+    </form>
+    <span></span>
+  </div>
+</dialog>
+
+<dialog id="compartilhar" aria-label="Compartilhar">
+  <div class="palco">
+    <span></span>
+    <div class="ficha bilhete">
+      <h3 id="comp-titulo">Compartilhar</h3>
+      <textarea id="comp-texto" rows="12" readonly></textarea>
+      <p class="erro ok" id="comp-status" aria-live="polite"></p>
+      <div class="ficha-botoes">
+        <button class="botao claro" type="button" data-fechar>Fechar</button>
+        <a class="botao verde" id="comp-whats" target="_blank" rel="noopener">WhatsApp</a>
+        <button class="botao" type="button" id="comp-copiar">Copiar texto</button>
+      </div>
+    </div>
+    <span></span>
+  </div>
+</dialog>
+
+<dialog id="sorvetes" aria-label="Ranking das sorveterias">
+  <div class="sorveteria">
+    <header class="sorv-topo">
+      <div><small>Linha rosa</small><h2>Ranking das sorveterias</h2></div>
+      <button class="redondo p escuro" data-fechar aria-label="Fechar">✕</button>
+    </header>
+    <div class="quem-avalia" role="tablist" aria-label="Quem está avaliando">
+      <button role="tab" data-quem="ju" aria-selected="true">Notas da Jú</button>
+      <button role="tab" data-quem="gui" aria-selected="false">Notas do Gui</button>
+    </div>
+    <p class="dica-sorv">Toque nas bolas pra dar de 1 a 5. O pódio se monta sozinho.</p>
+    <ol class="lista-sorv" id="lista-sorv"></ol>
+    <section class="podio-area">
+      <h3 id="podio-titulo">Top 3 da Jú</h3>
+      <div class="podio" id="podio"></div>
+    </section>
+    <section class="podio-area" id="combinado-area">
+      <h3>Top 3 dos dois</h3>
+      <div class="podio" id="podio-combinado"></div>
+      <p class="concordam" id="concordam"></p>
+    </section>
+    <div class="sorv-acoes"><button class="botao rosa" id="compartilhar-ranking" type="button">Compartilhar resultados</button></div>
+  </div>
+</dialog>
+
+<dialog id="recado" aria-label="Sugestão">
+  <div class="palco">
+    <header><span></span><button class="redondo p" data-fechar aria-label="Fechar">✕</button></header>
+    <div class="recado">
+      <div class="polaroid"><img src="fotos/02-soneca.jpg" alt="Jú dormindo"></div>
+      <p>Adicionar descanso na lista.</p>
+      <button class="botao amarelo" id="add-descanso" type="button">Adicionar descanso</button>
+    </div>
+    <span></span>
+  </div>
+</dialog>
+
+<script>
+/* ==================================================================
+   COMO EDITAR
+   Cada lugar é uma linha { nome: "..." }. Campos opcionais:
+     nota:    texto pequeno embaixo do nome
+     fotos:   ["arquivo.jpg"] (os arquivos ficam na pasta fotos/)
+     mapa:    o que buscar no Google Maps; use false pra não ter link
+     sorvete: true marca como sorveteria
+     feito:   false deixa a estação vazia (ainda não fomos)
+   ================================================================== */
+const ANOS = {
+  "2024": {
+    resumo: "duas visitas",
+    visitas: [
+      {
+        titulo: "Junho de 2024", cor: "#0455A1",
+        nota: "Chico Bento no shopping 🤠",
+        dias: [
+          { dia: "Sexta", lugares: [
+            { nome: "Café da manhã na Santa Micaela", fotos: ["43-santa-micaela.jpg"] },
+            { nome: "Almoço na Donna Carolina", fotos: ["01-donna-carolina.jpg"] },
+            { nome: "PineCo", sorvete: true, fotos: ["03-pineco.jpg"], mapa: "PineCo sorveteria São Paulo" },
+            { nome: "Roda Rico", nota: "a roda gigante, no pôr do sol", fotos: ["04-roda-rico-por-do-sol.jpg", "06-roda-rico-selfie.jpg"] },
+            { nome: "Festa junina no IME-USP", fotos: ["38-festa-junina-ime.jpg"], mapa: "IME USP" },
+            { nome: "Bar Alto", fotos: ["05-bar-alto.jpg"], mapa: "Bar Alto Pinheiros São Paulo" }
+          ]},
+          { dia: "Sábado", lugares: [
+            { nome: "Café da manhã em casa", mapa: false },
+            { nome: "Pinacoteca", fotos: ["07-pinacoteca.jpg"], mapa: "Pinacoteca de São Paulo" },
+            { nome: "Museu do Ipiranga", fotos: ["08-museu-do-ipiranga.jpg"] },
+            { nome: "Liberdade", nota: "almoço na feira", fotos: ["09-liberdade.jpg"], mapa: "Feira da Liberdade São Paulo" },
+            { nome: "Beco do Batman", fotos: ["41-beco-do-batman.jpg"] },
+            { nome: "Vila Madalena e Backyard", fotos: ["42-vila-madalena.jpg"], mapa: "Vila Madalena São Paulo" }
+          ]},
+          { dia: "Domingo", lugares: [
+            { nome: "Corrida no Ibirapuera", fotos: ["11-corrida-ibirapuera.jpg"], mapa: "Parque Ibirapuera" },
+            { nome: "Avenida Paulista", nota: "pelo caminho embaixo da Consolação" },
+            { nome: "Sesc Paulista", fotos: ["10-sesc-paulista.jpg"], mapa: "Sesc Avenida Paulista" },
+            { nome: "Bar do Galo", fotos: ["40-bar-do-galo.jpg"] },
+            { nome: "Bar Moela", fotos: ["39-bar-moela.jpg"] }
+          ]},
+          { dia: "Segunda", lugares: [
+            { nome: "Café da manhã em casa", mapa: false },
+            { nome: "Almoço na Donna Carolina", nota: "de novo" },
+            { nome: "Frida & Mina", sorvete: true, fotos: ["12-frida-e-mina.jpg"], mapa: "Frida e Mina sorveteria São Paulo" },
+            { nome: "Despedida", mapa: false }
+          ]}
+        ]
+      },
+      {
+        titulo: "Outubro de 2024", cor: "#00855F",
+        nota: "Juju em SP, parte 2",
+        dias: [
+          { dia: "Quinta", lugares: [
+            { nome: "Buscar a Jú no aeroporto", mapa: false },
+            { nome: "Sesc Pompeia", fotos: ["16-sesc-pompeia.jpg"] },
+            { nome: "Riviera Bar", nota: "date", fotos: ["13-riviera.jpg"] }
+          ]},
+          { dia: "Sexta", lugares: [
+            { nome: "Café da manhã em casa", mapa: false },
+            { nome: "Cachorro-quente do bairro", fotos: ["37-cachorro-quente.jpg"], mapa: false },
+            { nome: "Itaú Cultural", fotos: ["14-itau-cultural.jpg"] },
+            { nome: "Sampa Sky", fotos: ["36-sampa-sky.jpg"] },
+            { nome: "Funilaria", fotos: ["15-funilaria.jpg"], mapa: "Funilaria bar São Paulo" }
+          ]},
+          { dia: "Sábado", lugares: [
+            { nome: "Pedalar no Minhocão", fotos: ["17-minhocao.jpg"], mapa: "Minhocão Elevado João Goulart" },
+            { nome: "Sorveteria do Centro", sorvete: true, fotos: ["18-sorveteria-do-centro.jpg"] },
+            { nome: "Caracol Bar", fotos: ["35-caracol-bar.jpg"] }
+          ]},
+          { dia: "Domingo", lugares: [
+            { nome: "Show do Bruno Mars", fotos: ["19-bruno-mars.jpg"], mapa: false }
+          ]},
+          { dia: "Segunda", lugares: [
+            { nome: "Almoço na Donna Carolina" },
+            { nome: "Sorvete no Albero dei Gelati", sorvete: true, fotos: ["44-albero-dei-gelati.jpg"], mapa: "Albero dei Gelati São Paulo" },
+            { nome: "Despedida", mapa: false }
+          ]}
+        ]
+      }
+    ]
+  },
+  "2025": {
+    resumo: "uma visita, em clima de Natal",
+    visitas: [
+      {
+        titulo: "Dezembro de 2025", cor: "#E2231A",
+        nota: "",
+        dias: [
+          { dia: "Sexta", lugares: [
+            { nome: "Café da manhã em casa", mapa: false },
+            { nome: "Sesc Pinheiros", fotos: ["20-sesc-pinheiros.jpg"] },
+            { nome: "Il Sordo", sorvete: true, fotos: ["21-il-sordo.jpg"], mapa: "Il Sordo gelato Pinheiros" },
+            { nome: "Vitrais da FAAP", fotos: ["34-vitrais-faap.jpg"], mapa: "FAAP São Paulo" },
+            { nome: "Iluminação de Natal no Centro", fotos: ["22-natal-no-centro.jpg"], mapa: "Viaduto Santa Ifigênia" }
+          ]},
+          { dia: "Sábado", lugares: [
+            { nome: "Mosteiro de São Bento", fotos: ["30-mosteiro-sao-bento.jpg"] },
+            { nome: "25 de Março", fotos: ["31-25-de-marco.jpg"], mapa: "Rua 25 de Março São Paulo" },
+            { nome: "Bar Guanabara", fotos: ["33-bar-guanabara.jpg"] },
+            { nome: "Pateo do Collegio", fotos: ["23-pateo-do-collegio.jpg"] },
+            { nome: "Catedral da Sé", fotos: ["32-catedral-da-se.jpg"] },
+            { nome: "Dumbo", nota: "na Liberdade", sorvete: true, fotos: ["24-dumbo.jpg"], mapa: "Dumbo sorveteria Liberdade" },
+            { nome: "Edifício Martinelli", fotos: ["25-martinelli-espelho.jpg", "26-martinelli-festa.jpg"], mapa: "Edifício Martinelli" }
+          ]},
+          { dia: "Domingo", lugares: [
+            { nome: "Casa de Francisca", nota: "samba à tarde", fotos: ["28-casa-de-francisca.jpg"], mapa: "Casa de Francisca São Paulo" },
+            { nome: "Aniversário do Gabs", mapa: false }
+          ]},
+          { dia: "Segunda", lugares: [
+            { nome: "Mercado de Pinheiros", fotos: ["29-mercado-de-pinheiros.jpg"] },
+            { nome: "Ônibus pro Tietê", mapa: false }
+          ]}
+        ]
+      }
+    ]
+  },
+  "2026": {
+    resumo: "feriadão de 9 a 12 de outubro",
+    visitas: [
+      {
+        titulo: "Outubro de 2026", cor: "#F2B705",
+        nota: "Ideias pro feriadão de 9 a 12. As estações ficam vazias até a gente passar por elas.",
+        dias: [
+          { dia: "Sexta", lugares: [
+            { nome: "Prédio novo do MASP", feito: false, nota: "noite, grátis das 18h às 21h", mapa: "MASP Edifício Pietro Maria Bardi" },
+            { nome: "Matiz", feito: false, nota: "noite", mapa: "Matiz bar Rua Martins Fontes 91 São Paulo" },
+            { nome: "Tokyo", feito: false, nota: "noite, karaokê e rooftop", mapa: "Tokyo Rua Major Sertório 110 São Paulo" }
+          ]},
+          { dia: "Sábado", lugares: [
+            { nome: "Instituto Tomie Ohtake", feito: false, nota: "tarde" },
+            { nome: "Heavy House", feito: false, nota: "noite", mapa: "Heavy House Rua Benjamin Egas 297 São Paulo" }
+          ]},
+          { dia: "Domingo", lugares: [
+            { nome: "Theatro Municipal", feito: false, nota: "manhã", mapa: "Theatro Municipal de São Paulo" },
+            { nome: "Farol Santander", feito: false, nota: "tarde" },
+            { nome: "Conceição Discos", feito: false, nota: "tarde" },
+            { nome: "Balsa Bar", feito: false, nota: "fim de tarde" },
+            { nome: "Iccarus", feito: false, nota: "noite, no topo do Mirante do Vale", mapa: "Iccarus Mirante do Vale São Paulo" }
+          ]},
+          { dia: "Segunda", lugares: [
+            { nome: "Braz Elétrica", feito: false, nota: "almoço antes de ela ir embora", mapa: "Braz Elétrica São Paulo" }
+          ]}
+        ]
+      }
+    ]
+  }
+};
+
+
+const SRC = f => (typeof FOTOS !== "undefined" ? FOTOS[f] : "fotos/" + f);
+const mapaURL = q => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+const giro = i => [2.5, -3, 1.5, -2, 3, -1.5][i % 6] + "deg";
+const $ = id => document.getElementById(id);
+const semMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const conteudo = $("conteudo");
+let fotos = [], atual = 0, anoAtual = "2024";
+
+/* ---------- 1. senha ---------- */
+$("form-senha").addEventListener("submit", e => {
+  e.preventDefault();
+  const r = $("senha").value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const form = $("form-senha");
+  if (r.includes("amarel")) {
+    $("erro").textContent = "";
+    tocarTrilha();
+    form.classList.add("liberado");
+    setTimeout(() => trocarTela("portao", "plataforma", chegarTrem), semMovimento ? 0 : 650);
+  } else {
+    $("erro").textContent = r ? "Não é essa. Pensa na linha que passa aqui perto de casa." : "Escreve a cor pra liberar a catraca.";
+    form.classList.remove("tremer"); void form.offsetWidth; form.classList.add("tremer");
+  }
+});
+
+/* música: coloque o arquivo em musica/linha4.mp3; sem o arquivo, o site segue em silêncio */
+const trilha = $("trilha");
+function tocarTrilha() {
+  trilha.volume = 0.55;
+  const p = trilha.play();
+  if (p && p.then) p.then(() => { $("som").hidden = false; }).catch(() => {});
+}
+$("som").addEventListener("click", () => {
+  const ligado = $("som").getAttribute("aria-pressed") === "true";
+  if (ligado) trilha.pause(); else trilha.play().catch(() => {});
+  $("som").setAttribute("aria-pressed", ligado ? "false" : "true");
+  $("som").setAttribute("aria-label", ligado ? "Ligar a música" : "Desligar a música");
+});
+
+function trocarTela(de, para, depois) {
+  const a = $(de), b = $(para);
+  a.classList.add("saindo-tela");
+  setTimeout(() => {
+    a.hidden = true; a.classList.remove("saindo-tela");
+    b.hidden = false; b.style.animation = "aparecer .5s";
+    window.scrollTo(0, 0);
+    if (depois) depois();
+  }, semMovimento ? 0 : 550);
+}
+
+/* ---------- 2. trem ---------- */
+function chegarTrem() {
+  const cena = $("plataforma");
+  requestAnimationFrame(() => requestAnimationFrame(() => cena.classList.add("chegou")));
+  setTimeout(() => { $("cena").classList.add("abertas"); $("embarque").classList.add("pronto"); }, semMovimento ? 0 : 2700);
+}
+$("embarcar").addEventListener("click", () => {
+  const cena = $("plataforma");
+  $("cena").classList.remove("abertas");
+  $("embarque").classList.remove("pronto");
+  setTimeout(() => cena.classList.add("partiu"), semMovimento ? 0 : 750);
+  setTimeout(() => trocarTela("plataforma", "mapa", mostrarMapa), semMovimento ? 0 : 1900);
+});
+
+/* ---------- mapa ---------- */
+const rede = $("rede");
+function mostrarMapa() {
+  rede.classList.remove("desenhar", "mergulho");
+  rede.style.transform = "";
+  void rede.getBoundingClientRect();
+  rede.classList.add("desenhar");
+  const vias = rede.querySelectorAll(".via");
+  vias.forEach((v, i) => { v.style.setProperty("--len", Math.ceil(v.getTotalLength())); v.style.animationDelay = (0.15 + i * 0.18) + "s"; });
+  rede.querySelectorAll(".ponto, .hub").forEach((p, i) => { p.style.animationDelay = (0.9 + i * 0.05) + "s"; });
+  rede.querySelectorAll(".estacao-ano").forEach((s, i) => { s.style.animationDelay = (1.4 + i * 0.2) + "s"; });
+  $("balao-obra").classList.remove("visivel");
+}
+function irPara(estacao) {
+  const ano = estacao.dataset.ano;
+  const x = +estacao.dataset.x / 400 * 100, y = (+estacao.dataset.y - 6) / 500 * 100;
+  rede.style.transformOrigin = `${x}% ${y}%`;
+  rede.style.transform = "scale(3.2)";
+  rede.classList.add("mergulho");
+  setTimeout(() => trocarTela("mapa", "viagem", () => {
+    $("viagem").classList.remove("ativa"); void $("viagem").offsetWidth; $("viagem").classList.add("ativa");
+    desenhar(ano);
+  }), semMovimento ? 0 : 450);
+}
+rede.querySelectorAll(".estacao-ano[data-ano]").forEach(s => {
+  s.addEventListener("click", () => irPara(s));
+  s.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); irPara(s); } });
+});
+$("voltar").addEventListener("click", () => trocarTela("viagem", "mapa", mostrarMapa));
+
+/* 2027: em obras */
+let obraTimer;
+function avisarObra() {
+  const b = $("balao-obra");
+  const abrir = !b.classList.contains("visivel");
+  b.classList.toggle("visivel", abrir);
+  clearTimeout(obraTimer);
+  if (abrir) obraTimer = setTimeout(() => b.classList.remove("visivel"), 7000);
+}
+$("estacao-2027").addEventListener("click", avisarObra);
+$("estacao-2027").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); avisarObra(); } });
+
+/* ---------- 3. anos e estações ---------- */
+function parada(l, nova) {
+  const feito = l.feito !== false;
+  const consulta = l.mapa === false ? null : (l.mapa || l.nome + " São Paulo");
+  const extra = [l.nota, consulta ? `<a href="${mapaURL(consulta)}" target="_blank" rel="noopener">ver no mapa</a>` : ""].filter(Boolean).join(" · ");
+  let foto = "";
+  if (l.fotos && l.fotos.length) {
+    const i = fotos.length;
+    l.fotos.forEach(f => fotos.push({ f, nome: l.nome, consulta }));
+    foto = `<button class="foto polaroid${l.fotos.length > 1 ? " varias" : ""}" style="--r:${giro(i)}" data-i="${i}" aria-label="Ampliar foto: ${l.nome}">
+      <img src="${SRC(l.fotos[0])}" alt="" loading="lazy">
+      ${l.fotos.length > 1 ? `<span class="mais">+${l.fotos.length - 1}</span>` : ""}</button>`;
+  }
+  return `<li class="parada${feito ? "" : " aberta"}${l.nova ? " nova visivel" : ""}">
+    <div><span class="nome">${l.nome}</span>${l.sorvete ? '<span class="marca">sorveteria</span>' : ""}
+    ${extra ? `<span class="extra">${extra}</span>` : ""}</div>${foto}</li>`;
+}
+
+function desenhar(ano, manterVisiveis) {
+  anoAtual = ano; fotos = [];
+  let html = "";
+  ANOS[ano].visitas.forEach(v => {
+    const todos = v.dias.flatMap(d => d.lugares).concat(ano === "2026" ? planos.map(p => ({ ...p, feito: false })) : []);
+    const feitos = todos.filter(l => l.feito !== false).length;
+    const resumo = feitos ? `${feitos} estações` : `${todos.length} ideias`;
+    html += `<section class="visita" style="--cor:${v.cor};--sobre:${v.cor === "#F2B705" ? "#15181D" : "#fff"}">
+      <div class="visita-topo"><span class="selo">${ano.slice(2)}</span><h2>${v.titulo}</h2>
+      <p>${[v.nota, resumo].filter(Boolean).join(" · ")}</p>
+      ${ano === "2026" ? `<div class="quem"><span style="--c:${v.cor}"><i></i>Gui</span><span style="--c:var(--lilas)"><i></i>Jú</span></div>` : ""}</div>
+      <ol class="linha"><span class="preenchido" aria-hidden="true"></span>`;
+    const ordem = { "manhã": 0, "tarde": 1, "noite": 2 };
+    v.dias.forEach(d => {
+      html += `<li class="dia">${d.dia}</li>` + d.lugares.map(l => parada(l)).join("");
+      if (ano === "2026") html += planos.filter(p => (p.dia || "Sexta") === d.dia)
+        .sort((a, b) => (ordem[a.horario] ?? 3) - (ordem[b.horario] ?? 3) || (a.criado || 0) - (b.criado || 0))
+        .map(paradaDela).join("");
+    });
+    html += `</ol></section>`;
+  });
+  if (ano === "2026") html += `<div class="sugestao"><button class="botao amarelo" id="sugerir" type="button">Importante, não esquecer de:</button></div>`;
+  const sorvetes = ANOS[ano].visitas.flatMap(v => v.dias.flatMap(d => d.lugares)).filter(l => l.sorvete && l.feito !== false).length;
+  if (sorvetes) html += `<p class="rodape">Sorveterias em ${ano}: ${sorvetes}.</p>`;
+  conteudo.innerHTML = html;
+  document.body.dataset.ano = ano;
+  $("titulo-ano").textContent = ano;
+  $("resumo-ano").textContent = { "2024": "Duas visitas, duas linhas.", "2025": "Uma visita em clima de Natal.", "2026": "A próxima viagem, de 9 a 12 de outubro." }[ano];
+  $("participar").hidden = ano !== "2026";
+  $("compartilhar-roteiro").hidden = ano !== "2026";
+  $("abrir-album").textContent = fotos.length ? `Álbum de fotos (${fotos.length})` : "Álbum de fotos";
+  if (manterVisiveis) document.querySelectorAll(".parada").forEach(p => p.classList.add("visivel"));
+  observar(); atualizar();
+}
+
+let observador;
+function observar() {
+  if (observador) observador.disconnect();
+  if (!("IntersectionObserver" in window)) { document.querySelectorAll(".parada").forEach(p => p.classList.add("visivel")); return; }
+  observador = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("visivel"); observador.unobserve(e.target); }
+  }), { rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".parada:not(.visivel)").forEach(p => observador.observe(p));
+}
+let pedido = false;
+function atualizar() {
+  pedido = false;
+  const meio = window.innerHeight * 0.62;
+  document.querySelectorAll(".linha").forEach(linha => {
+    const r = linha.getBoundingClientRect();
+    linha.querySelector(".preenchido").style.height = Math.max(0, Math.min(r.height, meio - r.top)) + "px";
+    linha.querySelectorAll(".dia, .parada").forEach((el, i) => {
+      const t = el.getBoundingClientRect();
+      const y = el.classList.contains("dia") ? t.top + (i === 0 ? 14 : 44) : t.top + t.height / 2;
+      el.classList.toggle("passou", y < meio);
+    });
+  });
+}
+window.addEventListener("scroll", () => { if (!pedido) { pedido = true; requestAnimationFrame(atualizar); } }, { passive: true });
+window.addEventListener("resize", atualizar);
+
+/* ---------- sugestões da Jú (2026) ---------- */
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+let planos = [];
+function paradaDela(p) {
+  const extra = [esc(p.horario), p.local ? `<a href="${mapaURL(p.local + " São Paulo")}" target="_blank" rel="noopener">${esc(p.local)}</a>` : ""].filter(Boolean).join(" · ");
+  return `<li class="parada aberta dela visivel" data-id="${esc(p.id)}">
+    <div><span class="nome">${esc(p.titulo)}</span><span class="selo-dela">Jú</span>
+    <span class="extra">${extra}</span>${p.descricao ? `<span class="descricao">${esc(p.descricao)}</span>` : ""}</div>
+    <div class="mexer"><button type="button" data-editar="${esc(p.id)}">Editar</button><button type="button" data-apagar="${esc(p.id)}">Apagar</button></div></li>`;
+}
+function redesenhar2026() { if (anoAtual === "2026" && !$("viagem").hidden) desenhar("2026", true); }
+
+/* guarda as sugestões: lista compartilhada quando aberta pelo Claude; senão, neste aparelho */
+const CHAVE = "julia-sp-planos-2026";
+const armazem = {
+  db: null,
+  local() { try { planos = JSON.parse(localStorage.getItem(CHAVE)) || []; } catch (e) { planos = []; } },
+  gravar() { try { localStorage.setItem(CHAVE, JSON.stringify(planos)); } catch (e) {} },
+  async iniciar() {
+    this.local();
+    try {
+      if (!(window.claude && window.claude.use)) return;
+      const db = await window.claude.use("db");
+      if (!db) return;
+      this.db = db;
+      setTimeout(ligarNotasCompartilhadas, 0);
+      db.collection("planos").onSnapshot(s => {
+        planos = s.docs.map(d => ({ id: d.id, ...d.data() }));
+        redesenhar2026();
+      }, () => {});
+    } catch (e) {}
+  },
+  async salvar(p) {
+    const { id, ...dados } = p;
+    if (this.db) {
+      if (id) await this.db.doc("planos/" + id).set(dados);
+      else await this.db.collection("planos").add(dados);
+      return;
+    }
+    if (id) planos = planos.map(x => x.id === id ? { id, ...dados } : x);
+    else planos.push({ id: "p" + Date.now(), ...dados });
+    this.gravar(); redesenhar2026();
+  },
+  async apagar(id) {
+    if (this.db) { await this.db.doc("planos/" + id).delete(); return; }
+    planos = planos.filter(x => x.id !== id); this.gravar(); redesenhar2026();
+  }
+};
+armazem.iniciar();
+
+let editando = null;
+function abrirFicha(p) {
+  editando = p || null;
+  const f = $("ficha");
+  f.reset();
+  $("ficha-erro").textContent = "";
+  $("ficha-titulo").textContent = p ? "Editar sugestão" : "O que você quer fazer?";
+  $("ficha-salvar").textContent = p ? "Salvar alterações" : "Adicionar à lista";
+  if (p) { f.dia.value = p.dia || "Sexta"; f.titulo.value = p.titulo || ""; f.horario.value = p.horario || "manhã"; f.descricao.value = p.descricao || ""; f.local.value = p.local || ""; }
+  $("form-plano").showModal();
+  setTimeout(() => f.titulo.focus(), 50);
+}
+$("participar").addEventListener("click", () => abrirFicha());
+$("ficha").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  const titulo = f.titulo.value.trim();
+  if (!titulo) { $("ficha-erro").textContent = "Dá um nome pra sugestão."; return; }
+  const p = { titulo, dia: f.dia.value, horario: f.horario.value, descricao: f.descricao.value.trim(), local: f.local.value.trim(), criado: editando?.criado || Date.now() };
+  if (editando) p.id = editando.id;
+  $("ficha-salvar").disabled = true;
+  try { await armazem.salvar(p); $("form-plano").close(); }
+  catch (err) { $("ficha-erro").textContent = "Não deu pra salvar agora. Tenta de novo em instantes."; }
+  $("ficha-salvar").disabled = false;
+});
+conteudo.addEventListener("click", async e => {
+  const ed = e.target.closest("[data-editar]");
+  if (ed) { abrirFicha(planos.find(p => p.id === ed.dataset.editar)); return; }
+  const ap = e.target.closest("[data-apagar]");
+  if (!ap) return;
+  if (!ap.classList.contains("certeza")) {
+    ap.classList.add("certeza"); ap.textContent = "Apagar mesmo?";
+    setTimeout(() => { ap.classList.remove("certeza"); ap.textContent = "Apagar"; }, 3000);
+    return;
+  }
+  try { await armazem.apagar(ap.dataset.apagar); } catch (err) { ap.textContent = "Erro, tenta de novo"; }
+});
+
+/* ---------- compartilhar ---------- */
+function compartilhar(titulo, texto) {
+  $("comp-titulo").textContent = titulo;
+  $("comp-texto").value = texto;
+  $("comp-status").textContent = "";
+  $("comp-whats").href = "https://wa.me/?text=" + encodeURIComponent(texto);
+  $("compartilhar").showModal();
+}
+$("comp-copiar").addEventListener("click", async () => {
+  const txt = $("comp-texto");
+  try { await navigator.clipboard.writeText(txt.value); $("comp-status").textContent = "Copiado! É só colar na conversa."; }
+  catch (e) {
+    txt.focus(); txt.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e2) {}
+    $("comp-status").textContent = ok ? "Copiado! É só colar na conversa." : "Texto selecionado: segure e toque em Copiar.";
+  }
+});
+$("compartilhar-roteiro").addEventListener("click", () => {
+  const ordem = { "manhã": 0, "tarde": 1, "noite": 2 };
+  let txt = "🚇 Jú em São Paulo\nFeriadão de 9 a 12 de outubro\n";
+  ANOS["2026"].visitas[0].dias.forEach(d => {
+    const meus = d.lugares.map(l => `• ${l.nome}${l.nota ? ` (${l.nota})` : ""}`);
+    const dela = planos.filter(p => (p.dia || "Sexta") === d.dia)
+      .sort((a, b) => (ordem[a.horario] ?? 3) - (ordem[b.horario] ?? 3))
+      .map(p => `• ${p.titulo} (${p.horario}${p.local ? ", " + p.local : ""}) ★ ideia da Jú`);
+    const itens = meus.concat(dela);
+    if (itens.length) txt += `\n${d.dia.toUpperCase()}\n${itens.join("\n")}\n`;
+  });
+  compartilhar("Roteiro do feriadão", txt.trim());
+});
+
+/* ---------- ranking das sorveterias ---------- */
+const SORVETERIAS = [];
+Object.keys(ANOS).forEach(ano => ANOS[ano].visitas.forEach(v => v.dias.forEach(d => d.lugares.forEach(l => {
+  if (l.sorvete && l.feito !== false) SORVETERIAS.push({ nome: l.nome.replace(/^Sorvete n[oa] /, ""), foto: l.fotos && l.fotos[0], quando: v.titulo });
+}))));
+const CHAVE_NOTAS = "ju-sp-notas-sorvete";
+let notas = { ju: {}, gui: {} }, avaliador = "ju";
+try { notas = Object.assign(notas, JSON.parse(localStorage.getItem(CHAVE_NOTAS)) || {}); } catch (e) {}
+function gravarNotas(quem) {
+  try { localStorage.setItem(CHAVE_NOTAS, JSON.stringify(notas)); } catch (e) {}
+  if (armazem.db) armazem.db.doc("notas/" + quem).set(notas[quem]).catch(() => {});
+}
+function ligarNotasCompartilhadas() {
+  if (!armazem.db) return;
+  ["ju", "gui"].forEach(q => armazem.db.doc("notas/" + q).onSnapshot(s => {
+    if (s.exists) { notas[q] = s.data() || {}; if ($("sorvetes").open) desenharSorvetes(); }
+  }, () => {}));
+}
+const fotoMini = s => s.foto ? `<span class="polaroid"><img src="${SRC(s.foto)}" alt=""></span>` : `<span class="polaroid"><span class="sem-foto"><svg viewBox="0 0 24 32" width="26" height="34" aria-hidden="true"><path d="M5 14 L19 14 L12 30 Z" fill="#D9A35B" stroke="#15181D" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="10" r="7.5" fill="#E4567B" stroke="#15181D" stroke-width="1.6"/></svg></span></span>`;
+function top3(mapa) {
+  return SORVETERIAS.map(s => ({ ...s, nota: mapa(s.nome) })).filter(s => s.nota > 0)
+    .sort((a, b) => b.nota - a.nota || a.nome.localeCompare(b.nome)).slice(0, 3);
+}
+function podioHTML(lista, fmt) {
+  if (lista.length < 3) return `<p class="podio-vazio">Dê nota pra pelo menos 3 sorveterias pra montar o pódio.</p>`;
+  return [1, 0, 2].map(i => `<div class="degrau p${i + 1}">${fotoMini(lista[i]).replace('class="polaroid"', 'class="polaroid"')}
+    <strong>${lista[i].nome}</strong><span class="bloco">${i + 1}º</span><small>${fmt(lista[i].nota)}</small></div>`).join("");
+}
+const nomeDe = q => q === "ju" ? "Jú" : "Gui";
+function desenharSorvetes() {
+  const minhas = notas[avaliador] || {};
+  $("lista-sorv").innerHTML = SORVETERIAS.map(s => `<li class="sorv">${fotoMini(s)}<div><b>${s.nome}</b><small>${s.quando}</small>
+    <div class="bolas ${avaliador}" role="radiogroup" aria-label="Nota para ${s.nome}">${[1, 2, 3, 4, 5].map(n =>
+      `<button class="bola-nota ${n <= (minhas[s.nome] || 0) ? "cheia " + avaliador : ""}" data-sorv="${s.nome}" data-n="${n}" aria-label="${n} de 5" role="radio" aria-checked="${minhas[s.nome] === n}"></button>`).join("")}</div></div></li>`).join("");
+  document.querySelectorAll(".quem-avalia button").forEach(b => b.setAttribute("aria-selected", b.dataset.quem === avaliador ? "true" : "false"));
+  $("podio-titulo").textContent = `Top 3 ${avaliador === "ju" ? "da Jú" : "do Gui"}`;
+  $("podio").innerHTML = podioHTML(top3(n => minhas[n] || 0), n => `${n} de 5`);
+  const ambos = s => (notas.ju[s] && notas.gui[s]) ? (notas.ju[s] + notas.gui[s]) / 2 : 0;
+  const comb = top3(ambos);
+  $("podio-combinado").innerHTML = podioHTML(comb, n => `média ${String(n).replace(".", ",")}`);
+  const tj = top3(n => notas.ju[n] || 0), tg = top3(n => notas.gui[n] || 0);
+  let msg = "";
+  if (tj.length && tg.length) msg = tj[0].nome === tg[0].nome ? `Vocês concordam: ${tj[0].nome} é a campeã.` : `Briga boa: a Jú escolheu ${tj[0].nome} e o Gui escolheu ${tg[0].nome}.`;
+  else msg = "Quando os dois derem nota, aparece o resultado combinado.";
+  $("concordam").textContent = msg;
+}
+$("estacao-sorvete").addEventListener("click", () => { desenharSorvetes(); $("sorvetes").showModal(); $("sorvetes").querySelector(".sorveteria").scrollTop = 0; });
+$("estacao-sorvete").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("estacao-sorvete").dispatchEvent(new Event("click")); } });
+document.querySelector(".quem-avalia").addEventListener("click", e => {
+  const b = e.target.closest("[data-quem]"); if (!b) return;
+  avaliador = b.dataset.quem; desenharSorvetes();
+});
+$("lista-sorv").addEventListener("click", e => {
+  const b = e.target.closest(".bola-nota"); if (!b) return;
+  const nome = b.dataset.sorv, n = +b.dataset.n;
+  notas[avaliador] = { ...(notas[avaliador] || {}) };
+  notas[avaliador][nome] = notas[avaliador][nome] === n ? 0 : n;
+  gravarNotas(avaliador);
+  desenharSorvetes();
+  const nova = $("lista-sorv").querySelector(`[data-sorv="${CSS.escape(nome)}"][data-n="${n}"]`);
+  if (nova) nova.classList.add("estalo");
+});
+$("compartilhar-ranking").addEventListener("click", () => {
+  const linhas = (q) => {
+    const t = top3(n => notas[q][n] || 0);
+    return t.length ? t.map((s, i) => `${i + 1}º ${s.nome} (${s.nota}/5)`).join("\n") : "ainda sem notas";
+  };
+  const comb = top3(s => (notas.ju[s] && notas.gui[s]) ? (notas.ju[s] + notas.gui[s]) / 2 : 0);
+  let txt = `🍦 Ranking das sorveterias de SP\n\nTop 3 da Jú\n${linhas("ju")}\n\nTop 3 do Gui\n${linhas("gui")}`;
+  if (comb.length) txt += `\n\nTop 3 dos dois\n${comb.map((s, i) => `${i + 1}º ${s.nome} (média ${String(s.nota).replace(".", ",")})`).join("\n")}`;
+  compartilhar("Resultados das sorveterias", txt);
+});
+
+/* ---------- álbum do ano ---------- */
+$("abrir-album").addEventListener("click", () => {
+  $("album-titulo").textContent = `Álbum de ${anoAtual}` + (fotos.length ? ` · ${fotos.length} fotos` : "");
+  $("grade").innerHTML = fotos.length
+    ? fotos.map((f, i) => `<button class="polaroid" style="--r:${giro(i)};animation-delay:${Math.min(i * 0.04, 1)}s" data-i="${i}"><img src="${SRC(f.f)}" alt="" loading="lazy"><span>${f.nome}</span></button>`).join("")
+    : `<p class="vazio">As fotos dessa viagem ainda vão ser tiradas.</p>`;
+  $("album").showModal();
+  $("grade").scrollTop = 0;
+});
+$("grade").addEventListener("click", e => { const b = e.target.closest("[data-i]"); if (b) abrir(+b.dataset.i); });
+
+/* ---------- sugestão de 2026 ---------- */
+let descansoAdicionado = false;
+function colocarDescanso(nova) {
+  const sabado = ANOS["2026"].visitas[0].dias.find(d => d.dia === "Sábado");
+  sabado.lugares.unshift({ nome: "Descanso", nota: "manhã, sem despertador", feito: false, mapa: false, nova });
+  descansoAdicionado = true;
+}
+try { if (localStorage.getItem("julia-sp-descanso") === "1") colocarDescanso(false); } catch (e) {}
+conteudo.addEventListener("click", e => {
+  if (e.target.id !== "sugerir") return;
+  const b = $("add-descanso");
+  b.disabled = descansoAdicionado;
+  b.textContent = descansoAdicionado ? "Já está na lista, no sábado" : "Adicionar descanso";
+  $("recado").showModal();
+});
+$("add-descanso").addEventListener("click", () => {
+  $("recado").close();
+  if (descansoAdicionado) return;
+  colocarDescanso(true);
+  try { localStorage.setItem("julia-sp-descanso", "1"); } catch (e) {}
+  desenhar("2026", true);
+});
+document.querySelectorAll("[data-fechar]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
+
+/* ---------- foto ampliada ---------- */
+const dlg = $("ampliada"), quadro = $("quadro");
+function abrir(i) {
+  atual = (i + fotos.length) % fotos.length;
+  const f = fotos[atual];
+  const trocar = () => {
+    $("foto-grande").src = SRC(f.f); $("foto-grande").alt = f.nome;
+    $("legenda").textContent = f.nome;
+    $("contador").textContent = `${atual + 1} de ${fotos.length}`;
+    $("mapa-grande").innerHTML = f.consulta ? `<a href="${mapaURL(f.consulta)}" target="_blank" rel="noopener">ver no mapa</a>` : "";
+    quadro.classList.remove("trocando");
+  };
+  if (dlg.open) { quadro.classList.add("trocando"); setTimeout(trocar, 180); }
+  else { trocar(); dlg.showModal(); }
+}
+conteudo.addEventListener("click", e => { const b = e.target.closest(".foto"); if (b) abrir(+b.dataset.i); });
+$("anterior").onclick = () => abrir(atual - 1);
+$("proxima").onclick = () => abrir(atual + 1);
+$("fechar").onclick = () => dlg.close();
+document.querySelectorAll("dialog").forEach(d => d.addEventListener("click", e => {
+  if (e.target.classList.contains("palco")) d.close();
+}));
+document.addEventListener("keydown", e => {
+  if (!dlg.open) return;
+  if (e.key === "ArrowLeft") abrir(atual - 1);
+  if (e.key === "ArrowRight") abrir(atual + 1);
+});
+let toqueX = null;
+dlg.addEventListener("touchstart", e => { toqueX = e.touches[0].clientX; }, { passive: true });
+dlg.addEventListener("touchend", e => {
+  if (toqueX === null) return;
+  const dx = e.changedTouches[0].clientX - toqueX; toqueX = null;
+  if (Math.abs(dx) > 50) abrir(atual + (dx < 0 ? 1 : -1));
+});
+</script>
+</body>
+</html>
