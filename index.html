@@ -663,6 +663,18 @@
   </div>
 </dialog>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBF18ku5HgGauVG1aqc0ey0pW22evGAkc8",
+  authDomain: "julia-em-sp.firebaseapp.com",
+  projectId: "julia-em-sp",
+  storageBucket: "julia-em-sp.firebasestorage.app",
+  messagingSenderId: "597425167560",
+  appId: "1:597425167560:web:4d71b56aa2ef02e34a59fd"
+};
+</script>
 <script>
 /* ==================================================================
    COMO EDITAR
@@ -1110,9 +1122,11 @@ const armazem = {
     }
   },
   async semearDb(db) {
+    let jaSemeado = false;
+    try { jaSemeado = (await db.doc("config/semente-v2").get()).exists; }
+    catch (e) { try { jaSemeado = !(await db.collection("planos").get()).empty; } catch (e2) { return; } }
+    if (jaSemeado) return;
     try {
-      const flag = await db.doc("config/semente-v2").get();
-      if (flag.exists) return;
       for (const s of SEMENTES) { const { id, ...dados } = s; await db.doc("planos/" + id).set(dados); }
       await db.doc("config/semente-v2").set({ em: Date.now() });
     } catch (e) {}
@@ -1121,8 +1135,12 @@ const armazem = {
   async iniciar() {
     this.local();
     try {
-      if (!(window.claude && window.claude.use)) return;
-      const db = await window.claude.use("db");
+      let db = null;
+      if (window.claude && window.claude.use) db = await window.claude.use("db");
+      else if (window.firebase && window.FIREBASE_CONFIG) {
+        if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_CONFIG);
+        db = firebase.firestore();
+      }
       if (!db) return;
       this.db = db;
       setTimeout(ligarNotasCompartilhadas, 0);
