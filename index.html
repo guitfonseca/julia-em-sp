@@ -261,6 +261,11 @@
   .botao.lilas { background: var(--lilas); color: #fff; }
   .botao.claro { background: transparent; color: var(--tinta); border: 2px solid var(--tinta); }
   .acoes-ano { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .atualizar span { display: inline-block; margin-right: 4px; }
+  .atualizar.girando span { animation: girar .8s linear infinite; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  .sorv-botoes { display: flex; align-items: center; gap: 8px; }
+  .sorv-botoes .atualizar { padding: 9px 16px; font-size: .9rem; }
   .acoes-ano .botao { padding: 11px 18px; font-size: .95rem; }
   .quem { display: flex; gap: 16px; margin-top: 8px; font-size: .9rem; color: var(--cinza); }
   .quem span { display: inline-flex; align-items: center; gap: 6px; }
@@ -547,6 +552,7 @@
       <button class="botao lilas" id="participar" type="button" hidden>Participar da lista</button>
       <button class="botao claro" id="compartilhar-roteiro" type="button" hidden>Compartilhar roteiro</button>
       <button class="botao amarelo" id="sugerir" type="button" hidden>Importante, não esquecer de:</button>
+      <button class="botao claro atualizar" id="atualizar-lista" type="button" hidden><span aria-hidden="true">↻</span> Atualizar</button>
     </div>
   </header>
   <main id="conteudo"></main>
@@ -612,7 +618,8 @@
   <div class="sorveteria">
     <header class="sorv-topo">
       <div><small>Linha rosa</small><h2>Ranking das sorveterias</h2></div>
-      <button class="redondo p escuro" data-fechar aria-label="Fechar">✕</button>
+      <div class="sorv-botoes"><button class="botao claro atualizar" id="atualizar-sorv" type="button"><span aria-hidden="true">↻</span> Atualizar</button>
+      <button class="redondo p escuro" data-fechar aria-label="Fechar">✕</button></div>
     </header>
     <p class="intro-sorv">Cada um dá de 1 a 5 bolas pra cada sorveteria. O pódio de cada um se monta aqui em cima, e o dos dois aparece quando os dois tiverem votado.</p>
 
@@ -826,6 +833,7 @@ $("form-senha").addEventListener("submit", e => {
   if (r.includes("amarel")) {
     $("erro").textContent = "";
     form.classList.add("liberado");
+    try { localStorage.setItem("ju-sp-liberado", "1"); } catch (e) {}
     setTimeout(() => trocarTela("portao", "plataforma", chegarTrem), semMovimento ? 0 : 650);
   } else {
     $("erro").textContent = r ? "Não é essa. Pensa na linha que passa aqui perto de casa." : "Escreve a cor pra liberar a catraca.";
@@ -853,12 +861,17 @@ function pararMusica() {
   }, 40);
 }
 
+function marcarLugar(tela) {
+  const h = tela === "mapa" ? "#mapa" : tela === "viagem" ? "#" + anoAtual : "";
+  try { history.replaceState(null, "", location.pathname + location.search + h); } catch (e) {}
+}
 function trocarTela(de, para, depois) {
   const a = $(de), b = $(para);
   a.classList.add("saindo-tela");
   setTimeout(() => {
     a.hidden = true; a.classList.remove("saindo-tela");
     b.hidden = false; b.style.animation = "aparecer .5s";
+    marcarLugar(para);
     window.scrollTo(0, 0);
     if (depois) depois();
   }, semMovimento ? 0 : 550);
@@ -969,7 +982,7 @@ function irPara(estacao) {
   rede.classList.add("mergulho");
   setTimeout(() => trocarTela("mapa", "viagem", () => {
     $("viagem").classList.remove("ativa"); void $("viagem").offsetWidth; $("viagem").classList.add("ativa");
-    desenhar(ano);
+    desenhar(ano); marcarLugar("viagem");
   }), semMovimento ? 0 : 450);
 }
 rede.querySelectorAll(".estacao-ano[data-ano]").forEach(s => {
@@ -1036,6 +1049,7 @@ function desenhar(ano, manterVisiveis) {
   $("participar").hidden = ano !== "2026";
   $("compartilhar-roteiro").hidden = ano !== "2026";
   $("sugerir").hidden = ano !== "2026";
+  $("atualizar-lista").hidden = ano !== "2026";
   $("abrir-album").textContent = fotos.length ? `Álbum de fotos (${fotos.length})` : "Álbum de fotos";
   if (manterVisiveis) document.querySelectorAll(".parada").forEach(p => p.classList.add("visivel"));
   observar(); atualizar();
@@ -1163,6 +1177,21 @@ const armazem = {
     else planos.push({ id: "p" + Date.now(), ...dados });
     if (!this.gravar()) { planos = antes; throw new Error("cheio"); }
     redesenhar2026();
+  },
+  async recarregar() {
+    if (!this.db) {
+      this.local();
+      try { notas = Object.assign({ ju: {}, gui: {} }, JSON.parse(localStorage.getItem(CHAVE_NOTAS)) || {}); } catch (e) {}
+      try { extras = JSON.parse(localStorage.getItem(CHAVE_EXTRAS)) || []; } catch (e) {}
+      return;
+    }
+    const [p, s, nj, ng] = await Promise.all([
+      this.db.collection("planos").get(), this.db.collection("sorveterias").get(),
+      this.db.doc("notas/ju").get(), this.db.doc("notas/gui").get()
+    ]);
+    planos = p.docs.map(d => ({ id: d.id, ...d.data() }));
+    extras = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    notas = { ju: (nj.exists && nj.data()) || {}, gui: (ng.exists && ng.data()) || {} };
   },
   async apagar(id) {
     if (this.db) { await this.db.doc("planos/" + id).delete(); return; }
@@ -1477,6 +1506,34 @@ dlg.addEventListener("touchend", e => {
   const dx = e.changedTouches[0].clientX - toqueX; toqueX = null;
   if (Math.abs(dx) > 50) abrir(atual + (dx < 0 ? 1 : -1));
 });
+
+/* ---------- atualizar ---------- */
+async function atualizarTudo(botao) {
+  botao.classList.add("girando"); botao.disabled = true;
+  try { await armazem.recarregar(); } catch (e) {}
+  if (!$("viagem").hidden && anoAtual === "2026") desenhar("2026", true);
+  if ($("sorvetes").open) desenharSorvetes();
+  setTimeout(() => { botao.classList.remove("girando"); botao.disabled = false; }, 500);
+}
+$("atualizar-lista").addEventListener("click", e => atualizarTudo(e.currentTarget));
+$("atualizar-sorv").addEventListener("click", e => atualizarTudo(e.currentTarget));
+
+/* ---------- ao recarregar: não pede a senha de novo e volta pro mesmo lugar ---------- */
+(function voltarDeOndeParou() {
+  let liberado = false;
+  try { liberado = localStorage.getItem("ju-sp-liberado") === "1"; } catch (e) {}
+  if (!liberado) return;
+  const h = location.hash.slice(1);
+  $("portao").hidden = true;
+  if (ANOS[h] || h === "2026") {
+    $("viagem").hidden = false; $("viagem").classList.add("ativa");
+    desenhar(h);
+  } else if (h === "mapa") {
+    $("mapa").hidden = false; mostrarMapa();
+  } else {
+    $("plataforma").hidden = false; chegarTrem();
+  }
+})();
 </script>
 </body>
 </html>
