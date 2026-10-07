@@ -37,17 +37,6 @@
   :focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; }
   [hidden] { display: none !important; }
 
-  .som { position: fixed; top: calc(14px + env(safe-area-inset-top, 0px)); right: 14px; z-index: 20; height: 44px; min-width: 44px; padding: 0 16px 0 12px; border-radius: 999px; border: 0; background: var(--amarela); color: var(--tinta); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; box-shadow: 0 6px 16px -8px #000; animation: aparecer .4s; }
-  .som.iniciado, .som.compacto { padding: 0; justify-content: center; width: 44px; }
-  .som.iniciado .som-texto, .som.compacto .som-texto { display: none; }
-  .som.compacto:not(.iniciado) .ondas { display: none; }
-  .som.compacto:not(.iniciado) .mudo { display: inline; }
-  .som.compacto:not(.iniciado) { animation: aparecer .4s; }
-  .som:not(.iniciado) { animation: aparecer .4s, chamar 2s 1s infinite; }
-  @keyframes chamar { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,210,0,.7); } 60% { box-shadow: 0 0 0 12px rgba(255,210,0,0); } }
-  .som .mudo { display: none; }
-  .som.iniciado[aria-pressed="false"] .mudo { display: inline; }
-  .som.iniciado[aria-pressed="false"] .ondas { display: none; }
   .tela { min-height: 100dvh; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
   .saindo-tela { animation: sumir .6s forwards; }
   @keyframes sumir { to { opacity: 0; } }
@@ -419,12 +408,7 @@
 </head>
 <body data-ano="2024">
 
-<audio id="trilha" src="musica/linha4.mp3" preload="auto" loop></audio>
-<button class="som" id="som" type="button" aria-label="Tocar música" aria-pressed="false" hidden>
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="ondas" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mudo" d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-  <span class="som-texto">Tocar música</span>
-</button>
-
+<audio id="trilha" src="musica/linha4.mp3" preload="auto"></audio>
 <!-- 1. senha -->
 <section class="tela" id="portao">
   <svg class="fundo-linhas" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -839,24 +823,23 @@ $("form-senha").addEventListener("submit", e => {
 
 /* música: coloque o arquivo em musica/linha4.mp3; sem o arquivo, o site segue em silêncio */
 const trilha = $("trilha");
-let temMusica = true;
-trilha.addEventListener("error", () => { temMusica = false; });
 function ligarMusica() {
-  const b = $("som");
-  trilha.volume = 0.55;
-  return trilha.play().then(() => {
-    b.hidden = false; b.classList.add("iniciado"); b.setAttribute("aria-pressed", "true"); b.setAttribute("aria-label", "Desligar a música");
-  }).catch(() => {});
+  try { trilha.currentTime = 0; } catch (e) {}
+  trilha.volume = 1;
+  trilha.play().catch(() => {});
 }
-function mostrarBotaoSom() { if (!trilha.error) $("som").hidden = false; }
-$("som").addEventListener("click", () => {
-  const b = $("som");
-  if (!b.classList.contains("iniciado")) { ligarMusica(); return; }
-  const ligado = b.getAttribute("aria-pressed") === "true";
-  if (ligado) trilha.pause(); else trilha.play().catch(() => {});
-  b.setAttribute("aria-pressed", ligado ? "false" : "true");
-  b.setAttribute("aria-label", ligado ? "Ligar a música" : "Desligar a música");
-});
+/* a música é só da animação do trem: abaixa e para ao sair da plataforma */
+function pararMusica() {
+  if (trilha.paused) return;
+  const passos = 10;
+  let i = 0;
+  const t0 = trilha.volume;
+  const fade = setInterval(() => {
+    i++;
+    try { trilha.volume = Math.max(0, t0 * (1 - i / passos)); } catch (e) {}
+    if (i >= passos) { clearInterval(fade); trilha.pause(); try { trilha.volume = 1; } catch (e) {} }
+  }, 40);
+}
 
 function trocarTela(de, para, depois) {
   const a = $(de), b = $(para);
@@ -925,7 +908,6 @@ function embarcarPassageiros() {
 }
 function chegarTrem() {
   const cena = $("plataforma");
-  mostrarBotaoSom();
   if (!semMovimento) povoarPlataforma();
   requestAnimationFrame(() => requestAnimationFrame(() => cena.classList.add("chegou")));
   setTimeout(() => {
@@ -951,7 +933,7 @@ async function embarcar() {
   }
   $("cena").classList.remove("abertas");
   setTimeout(() => cena.classList.add("partiu"), semMovimento ? 0 : 750);
-  setTimeout(() => { $("som").classList.add("compacto"); $("som").setAttribute("aria-label", "Ligar a música"); trocarTela("plataforma", "mapa", mostrarMapa); }, semMovimento ? 0 : 1900);
+  setTimeout(() => { pararMusica(); trocarTela("plataforma", "mapa", mostrarMapa); }, semMovimento ? 0 : 1900);
 }
 
 /* ---------- mapa ---------- */
